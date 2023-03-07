@@ -1,12 +1,12 @@
-import requests
 from http import HTTPStatus
+
+import requests
 from dotenv import load_dotenv
 
+from app.exceptions import RequestAPIZONTError, ResponseAPIZONTError
 from app.settings import (
     BODY_REQUEST_DEVICES, URL_REQUEST_DEVICES, HEADERS, _logger
 )
-
-from app.exceptions import RequestAPIZONTError, ResponseAPIZONTError
 
 load_dotenv()
 

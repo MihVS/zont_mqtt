@@ -18,7 +18,7 @@ LOGGER_CONFIG = {
             'class': 'logging.handlers.RotatingFileHandler',
             'level': 'DEBUG',
             'formatter': 'my_format',
-            'filename': 'log/log.log',
+            'filename': '../log/log.log',
             'maxBytes': 50000000,
             'backupCount': 5,
             'encoding': 'utf8'
