@@ -18,14 +18,14 @@ LOGGER_CONFIG = {
             'class': 'logging.handlers.RotatingFileHandler',
             'level': 'DEBUG',
             'formatter': 'my_format',
-            'filename': 'log.log',
+            'filename': 'log/log.log',
             'maxBytes': 50000000,
             'backupCount': 5,
             'encoding': 'utf8'
         },
         'std': {
             'class': 'logging.StreamHandler',
-            'level': 'INFO',
+            'level': 'DEBUG',
             'formatter': 'my_format'
         }
     },

@@ -1,6 +1,8 @@
 .idea
 .env
+config_zont.py
 *.log
 venv
 __pycache__/
 .mypy_cache/
+mytest/
