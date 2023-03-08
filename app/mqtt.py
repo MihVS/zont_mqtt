@@ -9,6 +9,7 @@ from app.settings import (
 
 
 mqtt.Client.connected_flag = False
+client_mqtt = mqtt.Client('zont')
 
 return_codes = {
     0: 'Соединение успешно',
@@ -79,8 +80,6 @@ def on_message(client, userdata, msg):
 
 
 def main():
-    client_mqtt = mqtt.Client('zont')
-
     client_mqtt.on_log = on_log
     client_mqtt.on_connect = on_connect
     client_mqtt.on_disconnect = on_disconnect
