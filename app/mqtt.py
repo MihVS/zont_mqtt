@@ -78,28 +78,37 @@ def on_message(client, userdata, msg):
     print(f'топик: {msg.topic}, сообщение: {msg.payload}')
 
 
-client_mqtt = mqtt.Client('zont')
+def main():
+    client_mqtt = mqtt.Client('zont')
 
-client_mqtt.on_log = on_log
-client_mqtt.on_connect = on_connect
-client_mqtt.on_disconnect = on_disconnect
-client_mqtt.on_publish = on_publish
-client_mqtt.on_message = on_message
+    client_mqtt.on_log = on_log
+    client_mqtt.on_connect = on_connect
+    client_mqtt.on_disconnect = on_disconnect
+    client_mqtt.on_publish = on_publish
+    client_mqtt.on_message = on_message
 
-# client_mqtt.loop_start()
+    client_mqtt.loop_start()
 
-try:
-    client_mqtt.username_pw_set(username=USER_NAME_MQTT, password=PSWD_MQTT)
-    client_mqtt.connect(host=HOST_MQTT, port=PORT_MQTT)
-    # wait_connect(client_mqtt)
-except Exception as e:
-    _logger.error(f'MQTT брокер не доступен. {e}')
-    sys.exit(1)
+    try:
+        client_mqtt.username_pw_set(
+            username=USER_NAME_MQTT,
+            password=PSWD_MQTT
+        )
+        client_mqtt.connect(host=HOST_MQTT, port=PORT_MQTT)
+        wait_connect(client_mqtt)
+    except Exception as e:
+        _logger.error(f'MQTT брокер не доступен. {e}')
+        sys.exit(1)
 
-client_mqtt.publish(topic='zont/test', payload='Hellow world!', qos=0, retain=True)
+    # client_mqtt.publish(
+    # topic='zont/test', payload='Hellow world!', qos=0, retain=True
+    # )
+
+    # client_mqtt.loop_forever()
+    # time.sleep(2)
+    # client_mqtt.disconnect()
+    # client_mqtt.loop_stop()
 
 
-client_mqtt.loop_forever()
-# time.sleep(2)
-# client_mqtt.disconnect()
-# client_mqtt.loop_stop()
+if __name__ == '__main__':
+    main()
