@@ -1,14 +1,11 @@
 from http import HTTPStatus
 
 import requests
-from dotenv import load_dotenv
 
 from app.exceptions import RequestAPIZONTError, ResponseAPIZONTError
 from app.settings import (
     BODY_REQUEST_DEVICES, URL_REQUEST_DEVICES, HEADERS, _logger
 )
-
-load_dotenv()
 
 
 class Zont:
