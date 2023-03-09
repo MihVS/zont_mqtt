@@ -2,6 +2,7 @@
 .env
 config_zont.py
 *.log
+logs
 venv
 __pycache__/
 .mypy_cache/

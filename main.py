@@ -4,7 +4,7 @@ import time
 from app.mqtt import client_mqtt
 from app.mqtt import main as main_mqtt
 from app.zont import Zont
-from app.settings import RETRY_TIME, TOPIC_MQTT_ZONT
+from app.settings import RETRY_TIME, TOPIC_MQTT_ZONT, RETAIN_MQTT
 from configs.config_zont import DEVICES_PARAM
 
 
@@ -35,10 +35,14 @@ def read_zont_publish_mqtt(devices: list) -> None:
                 client_mqtt.publish(
                     topic=topic_temp,
                     payload=str(values_temp),
-                    retain=False
+                    retain=RETAIN_MQTT
                 )
 
-
+            client_mqtt.publish(
+                topic=f'{topic}status',
+                payload=str(device.get_status_device()),
+                retain=RETAIN_MQTT
+            )
 
         time.sleep(RETRY_TIME)
 
