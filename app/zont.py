@@ -20,7 +20,7 @@ class Zont:
         self.name = name
         self.device_id = device_id
         self.model = model
-        _logger.debug(f'Создан объект контроллера с id={self.device_id}')
+        _logger.debug(f'Создан объект контроллера с id = {self.device_id}')
 
     def get_status_device(self) -> dict:
         """
@@ -82,7 +82,7 @@ class Zont:
 
         _logger.debug(
             f'Показания температуры считаны из списка всех датчиков устройства'
-            f'id={self.device_id}'
+            f' id = {self.device_id}'
         )
         return all_temp
 

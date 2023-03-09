@@ -76,7 +76,7 @@ def on_message(client, userdata, msg):
     msg.payload тело сообщения.
     """
 
-    print(f'топик: {msg.topic}, сообщение: {msg.payload}')
+    # print(f'топик: {msg.topic}, сообщение: {msg.payload.decode("utf-8")}')
 
 
 def main():
