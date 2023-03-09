@@ -1,5 +1,6 @@
 import threading
 import time
+import json
 
 from app.mqtt import client_mqtt
 from app.mqtt import main as main_mqtt
@@ -34,14 +35,20 @@ def read_zont_publish_mqtt(devices: list) -> None:
                 topic_temp += str(values_temp.pop('id'))
                 client_mqtt.publish(
                     topic=topic_temp,
-                    payload=str(values_temp),
+                    payload=json.dumps(
+                        values_temp,
+                        ensure_ascii=False
+                    ),
                     retain=RETAIN_MQTT
                 )
 
             client_mqtt.publish(
                 topic=f'{topic}status',
-                payload=str(device.get_status_device()),
-                retain=RETAIN_MQTT
+                payload=json.dumps(
+                    device.get_status_device(),
+                    ensure_ascii=False
+                ),
+                retain=RETAIN_MQTT,
             )
 
         time.sleep(RETRY_TIME)
