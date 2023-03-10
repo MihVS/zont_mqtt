@@ -1,11 +1,10 @@
-import threading
-import time
 import json
+import time
 
 from app.mqtt import client_mqtt
 from app.mqtt import main as main_mqtt
-from app.zont import Zont
 from app.settings import RETRY_TIME, TOPIC_MQTT_ZONT, RETAIN_MQTT
+from app.zont import Zont
 from configs.config_zont import DEVICES_PARAM
 
 
@@ -16,6 +15,14 @@ def create_device(params: tuple) -> list:
     """
 
     return [Zont(*param) for param in params]
+
+
+def create_devices_in_home_assistant():
+    """
+    Создаёт объекты устройств в Home Assistant
+    """
+
+    pass
 
 
 def read_zont_publish_mqtt(devices: list) -> None:
@@ -32,7 +39,7 @@ def read_zont_publish_mqtt(devices: list) -> None:
 
             for values_temp in device.get_temperature():
                 topic_temp = topic + 'temp/'
-                topic_temp += str(values_temp.pop('id'))
+                topic_temp += str(values_temp['id'])
                 client_mqtt.publish(
                     topic=topic_temp,
                     payload=json.dumps(
@@ -59,16 +66,9 @@ def main():
     # Запуск mqtt
     main_mqtt()
 
-    # Запуск потока опроса контроллера
-    thr = threading.Thread(
-        target=read_zont_publish_mqtt,
-        args=[create_device(DEVICES_PARAM)],
-        daemon=True
-    )
-    thr.start()
+    # Запуск опроса
+    read_zont_publish_mqtt(create_device(DEVICES_PARAM))
 
 
 if __name__ == '__main__':
     main()
-    while True:
-        pass
