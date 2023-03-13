@@ -22,6 +22,9 @@ class Zont:
         self.model = model
         _logger.debug(f'Создан объект контроллера с id = {self.device_id}')
 
+    def __str__(self):
+        return f'{self.name} - {self.model} - {self.device_id}'
+
     def get_status_device(self) -> dict:
         """
         Получает все статусы и показания контроллера
