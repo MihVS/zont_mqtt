@@ -8,10 +8,14 @@ class HomeAssistant:
     """
 
     topic = TOPIC_MQTT_HA
+    device_class = {
+        'temp': 'temperature',
+        'humi': 'humidity',
+        'voltage': 'voltage'
+    }
 
-    def __init__(self, name, state_topic):
-        self.name = name
-        self.state_topic = state_topic
+    def __init__(self, object_device):
+        self.object_device = object_device
 
     def get_topic_temp(self):
         """
