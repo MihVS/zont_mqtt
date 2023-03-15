@@ -11,3 +11,8 @@ class ResponseAPIZONTError(Exception):
 class ENVError(Exception):
     """Ошибка доступности переменных окружения"""
     pass
+
+
+class TypeSensorError(Exception):
+    """Не верный тип сенсора"""
+    pass

@@ -16,8 +16,8 @@ PORT_MQTT = int(os.getenv('PORTMQTT'))
 CLIENT_MQTT = 'zont'
 USER_NAME_MQTT = os.getenv('USERNAMEMQTT')
 PSWD_MQTT = os.getenv('PSWDMQTT')
-TOPIC_MQTT_ZONT = 'zont/'
-TOPIC_MQTT_HA = 'homeassistant/'
+TOPIC_MQTT_ZONT = 'zont'
+TOPIC_MQTT_HA = 'homeassistant'
 RETAIN_MQTT = False
 
 HEADERS = {

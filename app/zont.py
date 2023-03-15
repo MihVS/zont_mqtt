@@ -2,9 +2,12 @@ from http import HTTPStatus
 
 import requests
 
-from app.exceptions import RequestAPIZONTError, ResponseAPIZONTError
+from app.exceptions import (
+    RequestAPIZONTError, ResponseAPIZONTError, TypeSensorError
+)
 from app.settings import (
-    BODY_REQUEST_DEVICES, URL_REQUEST_DEVICES, HEADERS, _logger
+    BODY_REQUEST_DEVICES, URL_REQUEST_DEVICES, HEADERS, TOPIC_MQTT_ZONT,
+    _logger
 )
 
 
@@ -15,6 +18,8 @@ class Zont:
     """
 
     param_devices = []
+
+    available_sensors = ('status', 'temp')
 
     def __init__(self, name, device_id, model):
         self.name = name
@@ -51,6 +56,48 @@ class Zont:
                 'API zont-online не соответствует ожидаемому'
             )
         return status
+
+    def get_state_topics(self, type_sensor: str) -> dict:
+        """
+        Создаёт словарь где ключ топик, а значение параметры датчика.
+        Принимает тип датчика в виде строки:
+            датчик температуры: 'temp'
+            датчик влажности: 'humi'
+            релейный выход: 'switch'
+
+        :return:
+        {
+            'zont/123456/temp/4103/': {
+                'name': 'Гараж воздух',
+                'type': 'digital',
+                'id': 4103,
+                'temp': 23.1,
+                'sensor_ok': True
+            },
+            ...
+        }
+        """
+
+        topics_and_states = {}
+        match type_sensor:
+            case 'temp':
+                get_params = self.get_temperature
+            case 'status':
+                get_params = self.get_status_device
+            case _:
+                _logger.error(f'Неизвестный тип сенсора: {type_sensor}')
+                raise TypeSensorError('Такого типа сенсора не существует!')
+        topic = f'{TOPIC_MQTT_ZONT}/{self.device_id}/{type_sensor}'
+        if type_sensor == 'status':
+            return {topic: self.get_status_device()}
+        for value in get_params():
+            topic_sens = f'{topic}/{str(value["id"])}'
+            topics_and_states[topic_sens] = value
+        _logger.debug(
+            f'Топики и значения успешно сформированы для сенсоров'
+            f' типа: {type_sensor}'
+        )
+        return topics_and_states
 
     def get_temperature(self) -> list:
         """

@@ -44,7 +44,7 @@ def on_connect(client, userdata, flags, rc):
         client.connected_flag = True
         _logger.debug(f'Статус connected_flag: {client.connected_flag}')
         _logger.info(f'Успешное соединение с mqtt брокером {HOST_MQTT}')
-        client.subscribe(f'{TOPIC_MQTT_ZONT}#')
+        client.subscribe(f'{TOPIC_MQTT_ZONT}/#')
     else:
         _logger.info(
             f'Ошибка соединения с mqtt брокером {HOST_MQTT}. '
@@ -62,10 +62,10 @@ def on_disconnect(client, userdata, flags, rc=0):
         _logger.debug(f'Статус connected_flag: {client.connected_flag}')
 
 
-def on_publish(client, userdata, mid):
-    """Функция обратного вызова при публикации сообщения"""
-
-    _logger.debug(f'Публикация сообщения. mid={mid}')
+# def on_publish(client, userdata, mid):
+#     """Функция обратного вызова при публикации сообщения"""
+#
+#     _logger.debug(f'Публикация сообщения. mid={mid}')
 
 
 def on_message(client, userdata, msg):
@@ -77,13 +77,14 @@ def on_message(client, userdata, msg):
     """
 
     # print(f'топик: {msg.topic}, сообщение: {msg.payload.decode("utf-8")}')
+    pass
 
 
 def main():
     client_mqtt.on_log = on_log
     client_mqtt.on_connect = on_connect
     client_mqtt.on_disconnect = on_disconnect
-    client_mqtt.on_publish = on_publish
+    # client_mqtt.on_publish = on_publish
     client_mqtt.on_message = on_message
 
     client_mqtt.loop_start()
