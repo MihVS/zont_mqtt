@@ -19,7 +19,7 @@ class Zont:
 
     param_devices = []
 
-    available_sensors = ('status', 'temp')
+    available_sensors = ('status', 'temp', 'humi')
 
     def __init__(self, name, device_id, model):
         self.name = name
@@ -79,17 +79,17 @@ class Zont:
         """
 
         topics_and_states = {}
+        topic = f'{TOPIC_MQTT_ZONT}/{self.device_id}/{type_sensor}'
         match type_sensor:
             case 'temp':
                 get_params = self.get_temperature
             case 'status':
-                get_params = self.get_status_device
+                return {topic: self.get_status_device()}
+            case 'humi':
+                return {}
             case _:
                 _logger.error(f'Неизвестный тип сенсора: {type_sensor}')
                 raise TypeSensorError('Такого типа сенсора не существует!')
-        topic = f'{TOPIC_MQTT_ZONT}/{self.device_id}/{type_sensor}'
-        if type_sensor == 'status':
-            return {topic: self.get_status_device()}
         for value in get_params():
             topic_sens = f'{topic}/{str(value["id"])}'
             topics_and_states[topic_sens] = value
@@ -99,7 +99,7 @@ class Zont:
         )
         return topics_and_states
 
-    def get_temperature(self) -> list:
+    def get_temperature(self) -> list[dict]:
         """
         Получает показания всех подключенных датчиков температуры.
 
@@ -136,7 +136,7 @@ class Zont:
         )
         return all_temp
 
-    def _scan_sensor_temp(self, param_device: dict) -> list:
+    def _scan_sensor_temp(self, param_device: dict) -> list[dict]:
         """
         Сканирует все подключенные датчики температуры к контроллеру.
 
