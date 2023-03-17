@@ -9,6 +9,6 @@ class Device(NamedTuple):
 
 # Поменяйте name, id, model на свои.
 # Измените название файла на config_zont.py
-DEVICES = (
+PARAMDEVICES = (
     Device(name='Вятка', id=123456, model='H2000_PRO'),
 )
