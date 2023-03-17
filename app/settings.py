@@ -18,6 +18,7 @@ USER_NAME_MQTT = os.getenv('USERNAMEMQTT')
 PSWD_MQTT = os.getenv('PSWDMQTT')
 TOPIC_MQTT_ZONT = 'zont'
 TOPIC_MQTT_HA = 'homeassistant'
+CREATE_CONFIG_HA = True
 RETAIN_MQTT = False
 
 HEADERS = {

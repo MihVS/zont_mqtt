@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from collections import namedtuple
 
 import requests
 
@@ -11,6 +12,13 @@ from app.settings import (
 )
 
 
+Entity = namedtuple('Entity',
+                    'status '
+                    'temperature '
+                    'humidity'
+                    )
+
+
 class Zont:
     """
     Класс для экземпляра контроллера ZONT.
@@ -19,9 +27,13 @@ class Zont:
 
     param_devices = []
 
-    available_sensors = ('status', 'temp', 'humi')
+    available_entities = Entity(
+        'status',
+        'temp',
+        'humi'
+    )
 
-    def __init__(self, name, device_id, model):
+    def __init__(self, name: str, device_id: int, model: str):
         self.name = name
         self.device_id = device_id
         self.model = model
@@ -57,7 +69,7 @@ class Zont:
             )
         return status
 
-    def get_state_topics(self, type_sensor: str) -> dict:
+    def get_state_topics(self, type_entity: str) -> dict:
         """
         Создаёт словарь где ключ топик, а значение параметры датчика.
         Принимает тип датчика в виде строки:
@@ -79,23 +91,23 @@ class Zont:
         """
 
         topics_and_states = {}
-        topic = f'{TOPIC_MQTT_ZONT}/{self.device_id}/{type_sensor}'
-        match type_sensor:
-            case 'temp':
+        topic = f'{TOPIC_MQTT_ZONT}/{self.device_id}/{type_entity}'
+        match type_entity:
+            case self.available_entities.temperature:
                 get_params = self.get_temperature
-            case 'status':
+            case self.available_entities.status:
                 return {topic: self.get_status_device()}
-            case 'humi':
+            case self.available_entities.humidity:
                 return {}
             case _:
-                _logger.error(f'Неизвестный тип сенсора: {type_sensor}')
+                _logger.error(f'Неизвестный тип сенсора: {type_entity}')
                 raise TypeSensorError('Такого типа сенсора не существует!')
         for value in get_params():
             topic_sens = f'{topic}/{str(value["id"])}'
             topics_and_states[topic_sens] = value
         _logger.debug(
             f'Топики и значения успешно сформированы для сенсоров'
-            f' типа: {type_sensor}'
+            f' типа: {type_entity}'
         )
         return topics_and_states
 

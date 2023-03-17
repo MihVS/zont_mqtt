@@ -16,3 +16,8 @@ class ENVError(Exception):
 class TypeSensorError(Exception):
     """Не верный тип сенсора"""
     pass
+
+
+class MethodNotOverridden(Exception):
+    """Не переопределён обязательный метод класса родителя"""
+    pass

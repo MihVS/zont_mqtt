@@ -8,7 +8,7 @@ class Device(NamedTuple):
 
 
 # Поменяйте name, id, model на свои.
-# И измените название файла на config_zont.py
+# Измените название файла на config_zont.py
 DEVICES = (
     Device(name='Вятка', id=123456, model='H2000_PRO'),
 )

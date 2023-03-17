@@ -1,4 +1,5 @@
-from settings import TOPIC_MQTT_HA
+from app.exceptions import MethodNotOverridden
+from app.settings import TOPIC_MQTT_HA
 
 
 class HomeAssistant:
@@ -7,42 +8,31 @@ class HomeAssistant:
     что бы home assistant автоматически добавлял их.
     """
 
-    topic = TOPIC_MQTT_HA
-    device_class = {
-        'temp': 'temperature',
-        'humi': 'humidity',
-        'voltage': 'voltage'
-    }
+    def __init__(self, device):
+        self.device = device
+        self.config = self._get_config()
 
-    def __init__(self, object_device):
-        self.object_device = object_device
-
-    def get_config(self):
-        pass
-
-    def get_topic_temp(self):
-        """
-        Получает и возвращает топик на который нужно отправить конфиг для НА
-        """
-
-        pass
-
-    def get_body_conf(self):
-        """
-        Получает и возвращает тело конфига.
-
-        :return:
-        """
-
-        pass
+    def _get_config(self):
+        raise MethodNotOverridden
 
 
-class Temperature(HomeAssistant):
+class Sensor(HomeAssistant):
+    """Клас для типов сущностей сенсоры"""
+    
+    type_entity = 'sensor'
+    topic_start = f'{TOPIC_MQTT_HA}/{type_entity}'
+
+
+class Temperature(Sensor):
     """
     Класс для создания конфига сенсоров температуры
     """
 
-    def get_config(self) -> dict:
+    class_entity = 'temperature'
+    unit_of_measurement = '°C'
+    topic_finish = f'{class_entity}/config'
+
+    def _get_config(self) -> dict:
         """
         :return:
         {
@@ -52,10 +42,27 @@ class Temperature(HomeAssistant):
                 'state_topic': 'zont/123456/temp/4103/',
                 'unit_of_measurement': '°C',
                 'value_template': '{{ value_json.temp }}'
-            }
+            },
+            ....
         }
         """
 
         config = {}
+        list_temp = self.device.get_state_topics(
+            self.device.available_entities.temperature
+        )
+        for state_topic, param_temp, in list_temp.items():
+            topic = (
+                f'{self.topic_start}/'
+                f'{str(self.device.device_id)}_{param_temp["id"]}/'
+                f'{self.topic_finish}'
+            )
+            config[topic] = {
+                'device_class': self.class_entity,
+                'name': param_temp['name'],
+                'state_topic': state_topic,
+                'unit_of_measurement': self.unit_of_measurement,
+                'value_template': '{{ value_json.temp }}'
+            }
 
         return config
