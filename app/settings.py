@@ -27,6 +27,6 @@ HEADERS = {
         'Content-Type': 'application/json'
     }
 
-URL_REQUEST_DEVICES = 'https://zont-online.ru/api/devices'
-BODY_REQUEST_DEVICES = {'load_io': True}
+URL_REQUEST_DEVICES = 'https://lk.zont-online.ru/api/widget/v2/get_devices'
+BODY_REQUEST_DEVICES = {}
 

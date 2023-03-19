@@ -1,11 +1,16 @@
 from pydantic import BaseModel, ValidationError
 
 
-class HeatingCircuit(BaseModel):
-    """Контур отопления"""
+class BaseEntityZONT(BaseModel):
+    """Базовая модель сущностей контроллера"""
 
     id: int
     name: str
+
+
+class HeatingCircuit(BaseEntityZONT):
+    """Контур отопления"""
+
     status: str
     active: bool
     actual_temp: float
@@ -16,30 +21,25 @@ class HeatingCircuit(BaseModel):
     target_max: float
 
 
-class HeatingMode(BaseModel):
+class HeatingMode(BaseEntityZONT):
     """Отопительные режимы"""
 
-    id: int
-    name: str
     can_be_applied: bool
     color: str
 
 
-class Sensor(BaseModel):
+class Sensor(BaseEntityZONT):
     """Сенсоры"""
-    id: int
-    name: str
+
     type: str
     status: str
     value: float
     unit: str
 
 
-class Zont(BaseModel):
+class PLC(BaseEntityZONT):
     """Модель контроллера"""
 
-    id: int
-    name: str
     model: str
     online: bool
     widget_type: str
@@ -48,18 +48,18 @@ class Zont(BaseModel):
     sensors: list[Sensor]
 
 
-class Device(BaseModel):
+class Zont(BaseModel):
     """Общий класс всех устройств"""
 
-    devices: list[Zont]
+    devices: list[PLC]
     ok: bool
 
 
-with open('../mytest/devices2.json') as f:
-    fl = f.read()
-    try:
-        dvc = Device.parse_raw(fl)
-    except ValidationError as e:
-        print(e.json())
-    else:
-        print(dvc.devices[0].sensors[1].value)
+# with open('../mytest/devices2.json') as f:
+#     fl = f.read()
+#     try:
+#         dvc = Device.parse_raw(fl)
+#     except ValidationError as e:
+#         print(e)
+#     else:
+#         print(dvc.devices[0].sensors[1].value)
