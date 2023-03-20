@@ -27,6 +27,13 @@ HEADERS = {
         'Content-Type': 'application/json'
     }
 
-URL_REQUEST_DEVICES = 'https://lk.zont-online.ru/api/widget/v2/get_devices'
-BODY_REQUEST_DEVICES = {}
-
+URL_GET_DEVICES = 'https://lk.zont-online.ru/api/widget/v2/get_devices'
+BODY_GET_DEVICES = {}
+URL_SET_TARGET_TEMP = 'https://lk.zont-online.ru/api/widget/v2/set_target_temp'
+URL_SET_GUARD = 'https://lk.zont-online.ru/api/widget/v2/set_guard'
+URL_ACTIVATE_HEATING_MODE = (
+    'https://lk.zont-online.ru/api/widget/v2/activate_heating_mode'
+)
+URL_TRIGGER_CUSTOM_BUTTON = (
+    'https://lk.zont-online.ru/api/widget/v2/trigger_custom_button'
+)

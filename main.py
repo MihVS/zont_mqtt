@@ -5,17 +5,11 @@ from http import HTTPStatus
 from pydantic import ValidationError
 
 from app.models import Zont
-from app.zont import get_data_zont, send_state_to_mqtt
+from app.zont import get_data_zont, send_state_to_mqtt, set_target_temp, toggle_custom_button
 
 from app.home_assistant import Temperature
 from app.mqtt import client_mqtt
 from app.mqtt import main as main_mqtt
-from app.settings import (
-    RETRY_TIME, RETAIN_MQTT, HEADERS, BODY_REQUEST_DEVICES,
-    URL_REQUEST_DEVICES,
-)
-
-
 
 
 # def send_statuses(topics: dict, retain) -> None:
@@ -70,7 +64,7 @@ from app.settings import (
 def main():
 
     # Запуск mqtt
-    main_mqtt()
+    # main_mqtt()
 
     # Zont.update_data()
 
@@ -79,14 +73,14 @@ def main():
     # Запуск опроса
     try:
         zont = Zont.parse_raw(get_data_zont())
-        print(zont.devices[1])
-        send_state_to_mqtt(zont)
+        # print(zont.devices[1])
+        # send_state_to_mqtt(zont)
+        # set_target_temp(278936, 8550, 24.3)
+        toggle_custom_button(zont.devices)
 
     except ValidationError as e:
         print(e)
         sys.exit(1)
-
-    send_state_to_mqtt(zont, ('sensors',))
 
 
 if __name__ == '__main__':
