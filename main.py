@@ -1,29 +1,21 @@
 import json
+import sys
 import time
-import requests
+from http import HTTPStatus
+from pydantic import ValidationError
 
-from app.zont import Zont
+from app.models import Zont
+from app.zont import get_data_zont, send_state_to_mqtt
+
 from app.home_assistant import Temperature
 from app.mqtt import client_mqtt
 from app.mqtt import main as main_mqtt
 from app.settings import (
     RETRY_TIME, RETAIN_MQTT, HEADERS, BODY_REQUEST_DEVICES,
-    URL_REQUEST_DEVICES, _logger
+    URL_REQUEST_DEVICES,
 )
 
 
-def get_data_zont() -> str:
-    """
-    Делаем запрос к API ZONT https://lk.zont-online.ru/api
-    :return:
-    Возвращает строку ответа от API.
-    """
-
-    return requests.post(
-        url=URL_REQUEST_DEVICES,
-        json=BODY_REQUEST_DEVICES,
-        headers=HEADERS
-    ).text
 
 
 # def send_statuses(topics: dict, retain) -> None:
@@ -78,16 +70,23 @@ def get_data_zont() -> str:
 def main():
 
     # Запуск mqtt
-    # main_mqtt()
+    main_mqtt()
 
     # Zont.update_data()
 
     # Публикуем конфиг в HA
 
     # Запуск опроса
+    try:
+        zont = Zont.parse_raw(get_data_zont())
+        print(zont.devices[1])
+        send_state_to_mqtt(zont)
 
-    zont = Zont.parse_raw(get_data_zont())
-    print(zont.devices[0])
+    except ValidationError as e:
+        print(e)
+        sys.exit(1)
+
+    send_state_to_mqtt(zont, ('sensors',))
 
 
 if __name__ == '__main__':

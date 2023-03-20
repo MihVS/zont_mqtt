@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.config.dictConfig(LOGGER_CONFIG)
-_logger = logging.getLogger('script_logger')
+LOGGER = logging.getLogger('script_logger')
 
 RETRY_TIME = 60
 CONNECT_COUNT_MQTT = 30

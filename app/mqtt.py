@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import time
 
 from app.settings import (
-    _logger, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT
+    LOGGER, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT
 )
 
 
@@ -26,7 +26,7 @@ def wait_connect(client):
 
     count = 0
     while not client.connected_flag and count < 7:
-        _logger.info(f'Соединяюсь с mqtt брокером {HOST_MQTT}')
+        LOGGER.info(f'Соединяюсь с mqtt брокером {HOST_MQTT}')
         time.sleep(5)
         count += 1
 
@@ -34,7 +34,7 @@ def wait_connect(client):
 def on_log(client, userdata, level, buf):
     """Обратный вызов ведения журнала логов для mqtt"""
 
-    _logger.debug(buf)
+    LOGGER.debug(buf)
 
 
 def on_connect(client, userdata, flags, rc):
@@ -42,11 +42,11 @@ def on_connect(client, userdata, flags, rc):
 
     if rc == 0:
         client.connected_flag = True
-        _logger.debug(f'Статус connected_flag: {client.connected_flag}')
-        _logger.info(f'Успешное соединение с mqtt брокером {HOST_MQTT}')
+        LOGGER.debug(f'Статус connected_flag: {client.connected_flag}')
+        LOGGER.info(f'Успешное соединение с mqtt брокером {HOST_MQTT}')
         client.subscribe(f'{TOPIC_MQTT_ZONT}/#')
     else:
-        _logger.info(
+        LOGGER.info(
             f'Ошибка соединения с mqtt брокером {HOST_MQTT}. '
             f'{return_codes[rc]}'
         )
@@ -56,10 +56,10 @@ def on_connect(client, userdata, flags, rc):
 def on_disconnect(client, userdata, flags, rc=0):
     """Функция обратного вызова при разрыве соединения с брокером mqtt."""
 
-    _logger.info(f'Соединение с broker MQTT потеряно, статус: {rc}')
+    LOGGER.info(f'Соединение с broker MQTT потеряно, статус: {rc}')
     if rc == 0:
         client.connected_flag = False
-        _logger.debug(f'Статус connected_flag: {client.connected_flag}')
+        LOGGER.debug(f'Статус connected_flag: {client.connected_flag}')
 
 
 # def on_publish(client, userdata, mid):
@@ -97,7 +97,7 @@ def main():
         client_mqtt.connect(host=HOST_MQTT, port=PORT_MQTT)
         wait_connect(client_mqtt)
     except Exception as e:
-        _logger.error(f'MQTT брокер не доступен. {e}')
+        LOGGER.error(f'MQTT брокер не доступен. {e}')
         sys.exit(1)
 
     # client_mqtt.publish(
