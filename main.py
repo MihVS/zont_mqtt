@@ -75,8 +75,9 @@ def main():
         zont = Zont.parse_raw(get_data_zont())
         # print(zont.devices[1])
         # send_state_to_mqtt(zont)
-        # set_target_temp(278936, 8550, 24.3)
-        toggle_custom_button(zont.devices)
+        # set_target_temp(278936, 8550, 24.3) 10436
+        toggle_custom_button(zont.devices[1], zont.devices[1].custom_controls[4], False)
+        # print(zont.devices[1].custom_controls[-1])
 
     except ValidationError as e:
         print(e)
