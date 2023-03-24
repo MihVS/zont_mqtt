@@ -8,7 +8,12 @@ class BaseEntityZONT(BaseModel):
     name: str
 
 
-class HeatingCircuit(BaseEntityZONT):
+class ControlEntityZONT(BaseEntityZONT):
+    """Базовая модель для управляемых сущностей"""
+    pass
+
+
+class HeatingCircuit(ControlEntityZONT):
     """Контур отопления"""
 
     status: str
@@ -21,7 +26,7 @@ class HeatingCircuit(BaseEntityZONT):
     target_max: float | None
 
 
-class HeatingMode(BaseEntityZONT):
+class HeatingMode(ControlEntityZONT):
     """Отопительные режимы"""
 
     can_be_applied: bool
@@ -37,14 +42,14 @@ class Sensor(BaseEntityZONT):
     unit: str
 
 
-class GuardZone(BaseEntityZONT):
+class GuardZone(ControlEntityZONT):
     """Охранная зона"""
 
     state: str
     alarm: bool
 
 
-class CustomControl(BaseEntityZONT):
+class CustomControl(ControlEntityZONT):
     """Пользовательский элемент управления"""
 
     name: dict
@@ -52,7 +57,7 @@ class CustomControl(BaseEntityZONT):
     status: bool
 
 
-class Scenario(BaseEntityZONT):
+class Scenario(ControlEntityZONT):
     """Сценарий"""
 
     pass
@@ -77,13 +82,3 @@ class Zont(BaseModel):
 
     devices: list[Device]
     ok: bool
-
-
-# with open('../mytest/devices2.json') as f:
-#     fl = f.read()
-#     try:
-#         dvc = Device.parse_raw(fl)
-#     except ValidationError as e:
-#         print(e)
-#     else:
-#         print(dvc.devices[0].sensors[1].value)

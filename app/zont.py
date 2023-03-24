@@ -3,12 +3,23 @@ from http import HTTPStatus
 
 from requests import Response
 
-from app.models import Zont, Device, HeatingMode, CustomControl, HeatingCircuit
+from app.models import (
+    Zont, Device, ControlEntityZONT, HeatingCircuit, CustomControl,
+    HeatingMode, GuardZone
+)
 from app.mqtt import client_mqtt
 from app.settings import (
     LOGGER, URL_GET_DEVICES, BODY_GET_DEVICES, HEADERS, TOPIC_MQTT_ZONT,
     RETAIN_MQTT, URL_SET_GUARD, URL_SET_TARGET_TEMP, URL_ACTIVATE_HEATING_MODE,
     URL_TRIGGER_CUSTOM_BUTTON
+)
+
+# Кортеж названий полей устройства, которыми можно управлять
+controls_name = (
+    'heating_modes',
+    'heating_circuits',
+    'custom_controls',
+    'guard_zones'
 )
 
 
@@ -65,6 +76,26 @@ def send_state_to_mqtt(
                 )
 
 
+def get_device_control_by_id(
+        zont: Zont, device_id: int, control_id: int
+) -> (tuple[Device, ControlEntityZONT] | None):
+    """
+    Функция для получения кортежа объектов устройства и объекта управления
+    (отопительный контур, режим отопления, созданная кнопка, охранная зона)
+    из переданных в неё id этих устройств.
+    Если совпадения не найдено, то возвращает None.
+    """
+
+    device = get_device_by_id(zont, device_id)
+    if device is None:
+        return None
+    for fild in controls_name:
+        objs = getattr(device, fild)
+        for obj in objs:
+            if obj.id == control_id:
+                return device, obj
+
+
 def get_device_by_id(zont: Zont, device_id: int) -> Device | None:
     """
     Возвращает объект устройства по его id.
@@ -77,51 +108,11 @@ def get_device_by_id(zont: Zont, device_id: int) -> Device | None:
     )
 
 
-def set_target_temp(
-        device: Device, circuit: HeatingCircuit, target_temp: float
-) -> None:
-    """
-    Отправка команды на прибор для установки явно заданной
-    целевой температуры в одном из отопительных контуров.
-    """
-
-    response = requests.post(
-        url=URL_SET_TARGET_TEMP,
-        json={
-            'device_id': device.id,
-            'circuit_id': HeatingCircuit.id,
-            'target_temp': target_temp
-        },
-        headers=HEADERS
-    )
-    status = response.status_code
-    if status == HTTPStatus.OK:
-        LOGGER.debug(f'Успешный запрос к API zont: {status}')
-        if response.json()['ok']:
-            LOGGER.info(
-                f'На устройстве {device.model}-{device.name} изменена '
-                f'целевая температура контура {circuit.name} '
-                f'на значение {target_temp}'
-            )
-        else:
-            LOGGER.error(
-                f'Ошибка контроллера {device.model}-{device.name}: '
-                f'{response.json()["error_ui"]}'
-            )
-    else:
-        LOGGER.error(f'Ошибка запроса к API zont: {status}')
-
-
-# def __get_target_state(*args) -> str:
-#     """Вспомогательная функция для получения"""
-
-
 def add_log_send_command(func):
     """
     Декоратор для добавления логирования при отправке команды
-    для управления контроллера
+    для управления контроллера.
     """
-
     def check_response(*args, **kwargs):
         length = len(args)
         if length == 3:
@@ -154,6 +145,25 @@ def add_log_send_command(func):
 
 
 @add_log_send_command
+def set_target_temp(
+        device: Device, circuit: HeatingCircuit, target_temp: float
+) -> Response:
+    """
+    Отправка команды на прибор для установки явно заданной
+    целевой температуры в одном из отопительных контуров.
+    """
+    return requests.post(
+        url=URL_SET_TARGET_TEMP,
+        json={
+            'device_id': device.id,
+            'circuit_id': circuit.id,
+            'target_temp': target_temp
+        },
+        headers=HEADERS
+    )
+
+
+@add_log_send_command
 def toggle_custom_button(
         device: Device, control: CustomControl, target_state: bool
 ) -> Response:
@@ -170,42 +180,13 @@ def toggle_custom_button(
     )
 
 
-# def toggle_custom_button(
-#     device: Device, control: CustomControl, target_state: bool
-# ) -> None:
-#     """Отправка на прибор команды нажатия пользовательской кнопки."""
-#
-#     response = requests.post(
-#         url=URL_TRIGGER_CUSTOM_BUTTON,
-#         json={
-#             'device_id': device.id,
-#             'control_id': control.id,
-#             'target_state': target_state
-#         },
-#         headers=HEADERS
-#     )
-# status = response.status_code
-# if status == HTTPStatus.OK:
-#     LOGGER.debug(f'Успешный запрос к API zont: {HTTPStatus.OK.name}')
-#     if response.json()['ok']:
-#         LOGGER.info(
-#             f'На устройстве {device.model}-{device.name}. '
-#             f'Пользовательская кнопка {control.name} '
-#             f'переключена в значение {target_state}'
-#         )
-#     else:
-#         LOGGER.error(
-#             f'Ошибка контроллера {device.model}-{device.name}: '
-#             f'{response.json()["error_ui"]}'
-#         )
-# else:
-#     LOGGER.error(f'Ошибка запроса к API zont: {status}')
-
-
-def activate_heating_mode(device: Device, heating_mode: HeatingMode) -> None:
+@add_log_send_command
+def activate_heating_mode(
+        device: Device, heating_mode: HeatingMode
+) -> Response:
     """Отправка команды на прибор для активации одного из режимов отопления"""
 
-    response = requests.post(
+    return requests.post(
         url=URL_ACTIVATE_HEATING_MODE,
         json={
             'device_id': device.id,
@@ -213,18 +194,21 @@ def activate_heating_mode(device: Device, heating_mode: HeatingMode) -> None:
         },
         headers=HEADERS
     )
-    status = response.status_code
-    if status == HTTPStatus.OK:
-        LOGGER.debug(f'Успешный запрос к API zont: {HTTPStatus.OK.name}')
-        if response.json()['ok']:
-            LOGGER.info(
-                f'На устройстве {device.model}-{device.name} активирован '
-                f'режим отопления {heating_mode.name}'
-            )
-        else:
-            LOGGER.error(
-                f'Ошибка контроллера {device.model}-{device.name}: '
-                f'{response.json()["error_ui"]}'
-            )
-    else:
-        LOGGER.error(f'Ошибка запроса к API zont: {status}')
+
+
+@add_log_send_command
+def set_guard(device: Device, guard_zone: GuardZone, enable: bool) -> Response:
+    """
+    Отправка команды на прибор для постановки на охрану
+    или снятие с охраны одной из зон.
+    """
+
+    return requests.post(
+        url=URL_SET_GUARD,
+        json={
+            'device_id': device.id,
+            'mode_id': guard_zone.id,
+            'enable': enable
+        },
+        headers=HEADERS
+    )
