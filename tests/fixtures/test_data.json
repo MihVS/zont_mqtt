@@ -1,0 +1,53 @@
+{
+    "devices": [
+        {
+            "id": 123456,
+            "name": "Объект1",
+            "model": "H2000_PRO",
+            "online": true,
+            "widget_type": "z3k",
+            "heating_circuits": [
+                {
+                    "id": 8550,
+                    "name": "1 этаж",
+                    "status": "ok",
+                    "active": false,
+                    "actual_temp": 24.6,
+                    "is_off": false,
+                    "target_temp": 24.0,
+                    "current_mode": 8389,
+                    "target_min": -30,
+                    "target_max": 100
+                }
+            ],
+            "heating_modes": [],
+            "sensors": [
+                {
+                    "id": 0,
+                    "name": "Напряжение питания",
+                    "type": "voltage",
+                    "status": "ok",
+                    "value": 12.2,
+                    "unit": "В",
+                    "icon": null,
+                    "color": null
+                },
+                {
+                    "id": 8534,
+                    "name": "Воздух 1 эт.",
+                    "type": "temperature",
+                    "status": "ok",
+                    "value": 24.6,
+                    "unit": "°C",
+                    "icon": null,
+                    "color": null
+                }
+            ],
+            "guard_zones": [],
+            "custom_controls": [],
+            "car_state": null,
+            "scenarios": []
+        }
+    ],
+    "ok": true
+}
