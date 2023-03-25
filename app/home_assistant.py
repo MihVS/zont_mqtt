@@ -1,5 +1,9 @@
+import json
+
 from app.exceptions import MethodNotOverridden
-from app.settings import TOPIC_MQTT_HA
+from app.settings import TOPIC_MQTT_HA, TOPIC_MQTT_ZONT
+from app.models import Zont
+from app.zont import get_list_state_for_mqtt
 
 
 class HomeAssistant:
@@ -8,8 +12,8 @@ class HomeAssistant:
     что бы home assistant автоматически добавлял их.
     """
 
-    def __init__(self, device):
-        self.device = device
+    def __init__(self, zont: Zont):
+        self.zont = zont
         self.config = self._get_config()
 
     def _get_config(self):
@@ -18,51 +22,46 @@ class HomeAssistant:
 
 class Sensor(HomeAssistant):
     """Клас для типов сущностей сенсоры"""
-    
+
     type_entity = 'sensor'
     topic_start = f'{TOPIC_MQTT_HA}/{type_entity}'
 
-
-class Temperature(Sensor):
-    """
-    Класс для создания конфига сенсоров температуры
-    """
-
-    class_entity = 'temperature'
-    unit_of_measurement = '°C'
-    topic_finish = f'{class_entity}/config'
-
     def _get_config(self) -> dict:
         """
-        :return:
         {
             'homeassistant/sensor/123456_4103/temperature/config': {
                 'device_class': 'temperature',
                 'name': '1 этаж. подача',
                 'state_topic': 'zont/123456/temp/4103/',
                 'unit_of_measurement': '°C',
-                'value_template': '{{ value_json.temp }}'
+                'value_template': '{{ value_json.temp }}',
+                'availability': [{'topic': 'zont/123456/online'}],
+                'payload_available': True,
+                'payload_not_available': False
             },
             ....
         }
         """
 
         config = {}
-        list_temp = self.device.get_state_topics(
-            self.device.available_entities.temperature
-        )
-        for state_topic, param_temp, in list_temp.items():
-            topic = (
-                f'{self.topic_start}/'
-                f'{str(self.device.device_id)}_{param_temp["id"]}/'
-                f'{self.topic_finish}'
-            )
+        list_state = get_list_state_for_mqtt(self.zont, ('sensors',))
+        for state_topic, state in list_state:
+            data: dict = json.loads(state)
+            id_device = state_topic.split('/')[1]
+            topic = (f'{self.topic_start}/'
+                     f'{id_device}_{data["id"]}/'
+                     f'{data["type"]}/config')
             config[topic] = {
-                'device_class': self.class_entity,
-                'name': param_temp['name'],
+                'device_class': data['type'],
+                'name': data['name'],
                 'state_topic': state_topic,
-                'unit_of_measurement': self.unit_of_measurement,
-                'value_template': '{{ value_json.temp }}'
+                'unit_of_measurement': data['unit'],
+                'value_template': '{{ value_json.value }}',
+                'availability': [
+                    {'topic': f'{TOPIC_MQTT_ZONT}/{id_device}/online'}
+                ],
+                'payload_available': True,
+                'payload_not_available': False
             }
 
         return config

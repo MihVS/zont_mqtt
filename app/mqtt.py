@@ -1,13 +1,15 @@
 import sys
+import time
 
 import paho.mqtt.client as mqtt
-import time
 
 from app.settings import (
     LOGGER, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT
 )
+from app.zont import get_data_zont
+from app.models import Zont
 
-
+mqtt.Client.zont = Zont.parse_raw(get_data_zont())
 mqtt.Client.connected_flag = False
 client_mqtt = mqtt.Client('zont')
 
@@ -44,13 +46,12 @@ def on_connect(client, userdata, flags, rc):
         client.connected_flag = True
         LOGGER.debug(f'Статус connected_flag: {client.connected_flag}')
         LOGGER.info(f'Успешное соединение с mqtt брокером {HOST_MQTT}')
-        client.subscribe(f'{TOPIC_MQTT_ZONT}/#')
+        client.subscribe(f'{TOPIC_MQTT_ZONT}/+/+/+/set/#')
     else:
         LOGGER.info(
             f'Ошибка соединения с mqtt брокером {HOST_MQTT}. '
             f'{return_codes[rc]}'
         )
-        # client_mqtt.loop_stop()
 
 
 def on_disconnect(client, userdata, flags, rc=0):
@@ -76,8 +77,10 @@ def on_message(client, userdata, msg):
     msg.payload тело сообщения.
     """
 
-    # print(f'топик: {msg.topic}, сообщение: {msg.payload.decode("utf-8")}')
-    pass
+    LOGGER.debug(
+        f'С топика {msg.topic} '
+        f'принято сообщение: {msg.payload.decode("utf-8")}'
+    )
 
 
 def main():
@@ -99,15 +102,6 @@ def main():
     except Exception as e:
         LOGGER.error(f'MQTT брокер не доступен. {e}')
         sys.exit(1)
-
-    # client_mqtt.publish(
-    # topic='zont/test', payload='Hellow world!', qos=0, retain=True
-    # )
-
-    # client_mqtt.loop_forever()
-    # time.sleep(2)
-    # client_mqtt.disconnect()
-    # client_mqtt.loop_stop()
 
 
 if __name__ == '__main__':

@@ -77,6 +77,11 @@ class TestZont(unittest.TestCase):
             TEST_LIST_STATE,
             'Не правильно формируется список кортежей статусов'
         )
+        self.assertEqual(
+            get_list_state_for_mqtt(self.zont, ('online',)),
+            [('zont/123456/online', True)],
+            'Неправильно работает фильтр полей функции'
+        )
 
 
 if __name__ == '__main__':

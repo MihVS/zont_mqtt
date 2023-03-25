@@ -65,7 +65,8 @@ def get_list_state_for_mqtt(
             if type(values) is list:
                 for value in values:
                     list_states.append(
-                        (f'{topic_device}/{field}/{value.id}', value.json())
+                        (f'{topic_device}/{field}/{value.id}',
+                         value.json(ensure_ascii=False))
                     )
             else:
                 list_states.append(
