@@ -7,7 +7,6 @@ from app.models import (
     Zont, Device, ControlEntityZONT, HeatingCircuit, CustomControl,
     HeatingMode, GuardZone
 )
-from app.mqtt import client_mqtt
 from app.settings import (
     LOGGER, URL_GET_DEVICES, BODY_GET_DEVICES, HEADERS, TOPIC_MQTT_ZONT,
     RETAIN_MQTT, URL_SET_GUARD, URL_SET_TARGET_TEMP, URL_ACTIVATE_HEATING_MODE,
@@ -44,15 +43,18 @@ def get_data_zont() -> str:
     return response.text
 
 
-def send_state_to_mqtt(
+def get_list_state_for_mqtt(
         zont: Zont, fields_device: tuple[str, ...] = tuple()
-) -> None:
+) -> list[tuple, ...]:
     """
-    Функция для отправки состояний сенсоров в mqtt.
+    Функция для подготовки данных для отправки состояний сенсоров в mqtt.
     Принимает объект класса Zont и кортеж полей класса Device
     которые нужно публиковать в mqtt.
+    :return:
+    [(topic, payload), ...]
     """
 
+    list_states = []
     for device in zont.devices:
         if not fields_device:
             fields_device = tuple(device.__fields__.keys())
@@ -62,18 +64,14 @@ def send_state_to_mqtt(
             values = getattr(device, field)
             if type(values) is list:
                 for value in values:
-                    payload = value.json()
-                    client_mqtt.publish(
-                        topic=f'{topic_device}/{field}/{value.id}',
-                        payload=payload,
-                        retain=RETAIN_MQTT
+                    list_states.append(
+                        (f'{topic_device}/{field}/{value.id}', value.json())
                     )
             else:
-                client_mqtt.publish(
-                    topic=f'{topic_device}/{field}',
-                    payload=values,
-                    retain=RETAIN_MQTT
+                list_states.append(
+                    (f'{topic_device}/{field}', values)
                 )
+    return list_states
 
 
 def get_device_control_by_id(
