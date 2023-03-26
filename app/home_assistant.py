@@ -57,11 +57,17 @@ class Sensor(HomeAssistant):
                 'state_topic': state_topic,
                 'unit_of_measurement': data['unit'],
                 'value_template': '{{ value_json.value }}',
+                'enabled_by_default': True,
+                'json_attributes_topic': state_topic,
+                'unique_id': (f'{id_device}_{data["id"]}_'
+                              f'{data["type"]}_{TOPIC_MQTT_ZONT}'),
                 'availability': [
-                    {'topic': f'{TOPIC_MQTT_ZONT}/{id_device}/online'}
-                ],
-                'payload_available': True,
-                'payload_not_available': False
+                    {
+                        'topic': f'{TOPIC_MQTT_ZONT}/{id_device}/online',
+                        'payload_available': 'True',
+                        'payload_not_available': 'False'
+                    }
+                ]
             }
 
         return config
