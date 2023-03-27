@@ -1,10 +1,16 @@
+import logging
 import unittest
+from unittest.mock import patch
 
 from app.models import Zont, Device, ControlEntityZONT
 from app.zont import (
-    get_device_by_id, get_device_control_by_id, get_list_state_for_mqtt
+    get_device_by_id, get_device_control_by_id, get_list_state_for_mqtt,
+    is_correct_temperature, is_correct_activate_mode, is_correct_toggle
 )
 from tests.fixtures.test_data import TEST_LIST_STATE
+
+
+logging.disable(logging.NOTSET)
 
 
 class TestZont(unittest.TestCase):
@@ -82,6 +88,69 @@ class TestZont(unittest.TestCase):
             [('zont/123456/online', True)],
             'Неправильно работает фильтр полей функции'
         )
+
+    def test_is_correct_temperature(self):
+        """Тест функции для проверки корректной температуры."""
+        self.assertTrue(
+            is_correct_temperature('26.3'),
+            'Правильное значение температуры не проходит.'
+        )
+        self.assertFalse(
+            is_correct_temperature('35.1'),
+            'Ошибка проверки в верхнем пороге температуры.'
+        )
+        self.assertFalse(
+            is_correct_temperature('4.9'),
+            'Ошибка проверки в нижнем пороге температуры.'
+        )
+        self.assertFalse(
+            is_correct_temperature('zont'),
+            'Неправильная работа с символьным значением температуры.'
+        )
+
+    def test_is_correct_activate_mode(self):
+        """
+        Тест функции проверки корректность команды
+        на активацию режима отопления
+        """
+        self.assertTrue(
+            is_correct_activate_mode('activate'),
+            'Правильная команда активации режима отопления не проходит.'
+        )
+        self.assertFalse(
+            is_correct_activate_mode('zont'),
+            'Неверная команда активации режима отопления не должна проходить.'
+        )
+
+    def test_is_correct_toggle(self):
+        """
+        Тест функции проверки корректности команды на переключение
+        состояния ВКЛЮЧЕНО и ВЫКЛЮЧЕНО.
+        """
+        self.assertTrue(
+            is_correct_toggle('on'),
+            'Правильная команда на включение не проходит.'
+        )
+        self.assertTrue(
+            is_correct_toggle('off'),
+            'Правильная команда на выключение не проходит.'
+        )
+        self.assertTrue(
+            is_correct_toggle('ON'),
+            'Правильная команда в верхнем регистре не проходит.'
+        )
+        self.assertFalse(
+            is_correct_toggle('вкл'),
+            'Неправильная команда переключение состояния не должна проходить.'
+        )
+
+    # @patch('app.zont.requests.post')
+    # def test_control_device_set_target_temp(self, mock_post):
+    #     """
+    #     Тест отправки команды для изменения заданной температуры при
+    #     получении корректных данных в mqtt.
+    #     """
+    #
 
 
 if __name__ == '__main__':
