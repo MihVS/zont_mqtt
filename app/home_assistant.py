@@ -35,10 +35,14 @@ class Sensor(HomeAssistant):
                 'state_topic': 'zont/123456/temp/4103/',
                 'unit_of_measurement': '°C',
                 'value_template': '{{ value_json.temp }}',
-                'availability': [{'topic': 'zont/123456/online'}],
-                'payload_available': True,
-                'payload_not_available': False
-            },
+                'json_attributes_topic': 'zont/123456/temp/4103/',
+                'availability': [
+                    {
+                        'topic': 'zont/123456/online',
+                        'payload_available': 'True',
+                        'payload_not_available': 'False'
+                    }
+                ]
             ....
         }
         """
@@ -57,7 +61,7 @@ class Sensor(HomeAssistant):
                 'state_topic': state_topic,
                 'unit_of_measurement': data['unit'],
                 'value_template': '{{ value_json.value }}',
-                'enabled_by_default': True,
+                # 'enabled_by_default': True,
                 'json_attributes_topic': state_topic,
                 'unique_id': (f'{id_device}_{data["id"]}_'
                               f'{data["type"]}_{TOPIC_MQTT_ZONT}'),

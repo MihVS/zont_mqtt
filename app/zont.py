@@ -1,5 +1,6 @@
 import requests
 from http import HTTPStatus
+from collections import namedtuple
 
 from requests import Response
 
@@ -13,8 +14,12 @@ from app.settings import (
     URL_TRIGGER_CUSTOM_BUTTON
 )
 
+ControlName = namedtuple('ControlName', [
+    'heat_mode', 'heat_circ', 'cust_contr', 'guard_zone'
+])
+
 # Кортеж названий полей устройства, которыми можно управлять
-controls_name = (
+control_names = ControlName(
     'heating_modes',
     'heating_circuits',
     'custom_controls',
@@ -88,7 +93,7 @@ def get_device_control_by_id(
     device = get_device_by_id(zont, device_id)
     if device is None:
         return None
-    for fild in controls_name:
+    for fild in control_names:
         objs = getattr(device, fild)
         for obj in objs:
             if obj.id == control_id:
@@ -211,3 +216,78 @@ def set_guard(device: Device, guard_zone: GuardZone, enable: bool) -> Response:
         },
         headers=HEADERS
     )
+
+
+def is_temperature(temp: str) -> bool:
+    """Проверяет значение температуры на корректность"""
+
+    try:
+        temp = float(temp)
+        if 4 < temp < 36:
+            return True
+    except (ValueError, TypeError):
+        LOGGER.debug(f'Значение температуры не корректно: {temp}')
+
+def is_activate_mode(command: str) -> bool:
+    """Проверяет корректность команды на активацию отопительного режима"""
+
+    return True if command == 'activate' else False
+
+
+def is_correct_toggle(command: str) -> bool:
+    """Проверяет корректность команды для переключения состояния кнопки"""
+
+    return True if command in ('ON', 'OFF') else False
+
+
+def control_device(zont: Zont, topic: str, payload: str) -> None:
+    """
+    Функция для управления заданными параметрами контроллера.
+    Принимает объект Zont, топик команды и тело команды.
+    """
+
+    zont.topic = TOPIC_MQTT_ZONT
+    data: list[str, ...] = topic.split('/')
+    match data:
+        case [
+            zont.topic, device_id, control_names.heat_circ, control_id, 'set'
+        ]:
+            if is_temperature(payload):
+                device_control = get_device_control_by_id(
+                    zont, device_id, control_id
+                )
+                if device_control is not None:
+                    set_target_temp(*device_control, float(payload))
+        case [
+            zont.topic, device_id, control_names.heat_mode, control_id, 'set'
+        ]:
+            if activate_heating_mode(payload):
+                device_control = get_device_control_by_id(
+                    zont, device_id, control_id
+                )
+                if device_control is not None:
+                    activate_heating_mode(*device_control)
+        case [
+            zont.topic, device_id, control_names.cust_contr, control_id, 'set'
+        ]:
+            if is_correct_toggle(payload):
+                device_control = get_device_control_by_id(
+                    zont, device_id, control_id
+                )
+                if payload == 'ON' and device_control is not None:
+                    toggle_custom_button(*device_control, True)
+                if payload == 'OFF' and device_control is not None:
+                    toggle_custom_button(*device_control, False)
+        case [
+            zont.topic, device_id, control_names.guard_zone, control_id, 'set'
+        ]:
+            if is_correct_toggle(payload):
+                device_control = get_device_control_by_id(
+                    zont, device_id, control_id
+                )
+                if payload == 'ON' and device_control is not None:
+                    set_guard(*device_control, True)
+                if payload == 'OFF' and device_control is not None:
+                    set_guard(*device_control, False)
+        case _:
+            LOGGER.debug(f'Такого адресата не существует: {topic}')
