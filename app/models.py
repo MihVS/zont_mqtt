@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.settings import TOPIC_MQTT_ZONT
+
 
 class BaseEntityZONT(BaseModel):
     """Базовая модель сущностей контроллера"""
@@ -82,3 +84,4 @@ class Zont(BaseModel):
 
     devices: list[Device]
     ok: bool
+    topic: str = TOPIC_MQTT_ZONT

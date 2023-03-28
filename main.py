@@ -9,7 +9,7 @@ from app.mqtt import main as main_mqtt
 from app.mqtt import client_mqtt
 from app.settings import RETAIN_MQTT, CREATE_CONFIG_HA
 from app.zont import (
-    get_data_zont, get_list_state_for_mqtt
+    get_data_zont, get_list_state_for_mqtt, control_device
 )
 from app.home_assistant import Sensor
 
@@ -41,7 +41,7 @@ def publish_config_ha(zont: Zont, create_conf: bool) -> None:
 def main():
 
     # Запуск mqtt
-    main_mqtt()
+    # main_mqtt()
 
     # Zont.update_data()
 
@@ -50,8 +50,13 @@ def main():
     # Запуск опроса
     try:
         # zont = Zont.parse_raw(get_data_zont())
-        publish_config_ha(client_mqtt.zont, CREATE_CONFIG_HA)
-        publish_state_to_mqtt(get_list_state_for_mqtt(client_mqtt.zont))
+        control_device(
+            client_mqtt.zont,
+            'zont/278936/heating_circuits/8550/set',
+            '25'
+        )
+        # publish_config_ha(client_mqtt.zont, CREATE_CONFIG_HA)
+        # publish_state_to_mqtt(get_list_state_for_mqtt(client_mqtt.zont))
         # dev_cont = get_device_control_by_id(zont, 278936, 8550)
         # set_target_temp(*dev_cont, 24.3)
         # toggle_custom_button(zont.devices[1], zont.devices[1].custom_controls[4], False)
@@ -62,5 +67,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    while True:
-        pass
+    # while True:
+    #     pass

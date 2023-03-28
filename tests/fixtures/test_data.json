@@ -20,7 +20,14 @@
                     "target_max": 100
                 }
             ],
-            "heating_modes": [],
+            "heating_modes": [
+                {
+                    "id": 8389,
+                    "name": "Чиллл",
+                    "can_be_applied": true,
+                    "color": "#33aa66"
+                }
+            ],
             "sensors": [
                 {
                     "id": 0,
@@ -43,8 +50,25 @@
                     "color": null
                 }
             ],
-            "guard_zones": [],
-            "custom_controls": [],
+            "guard_zones": [
+                {
+                    "id": 9413,
+                    "name": "Охрана дома",
+                    "state": "disabled",
+                    "alarm": false
+                }
+            ],
+            "custom_controls": [
+                {
+                    "id": 8507,
+                    "type": "toggle_button",
+                    "name": {
+                        "when_active": "Свет 1 этаж включен",
+                        "when_inactive": "Свет 1 этаж выключен"
+                    },
+                    "status": true
+                }
+            ],
             "car_state": null,
             "scenarios": []
         }

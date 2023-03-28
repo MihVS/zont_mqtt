@@ -5,12 +5,12 @@ from unittest.mock import patch
 from app.models import Zont, Device, ControlEntityZONT
 from app.zont import (
     get_device_by_id, get_device_control_by_id, get_list_state_for_mqtt,
-    is_correct_temperature, is_correct_activate_mode, is_correct_toggle
+    is_correct_temperature, is_correct_activate_mode, is_correct_toggle,
+    control_device
 )
 from tests.fixtures.test_data import TEST_LIST_STATE
 
-
-logging.disable(logging.NOTSET)
+logging.disable(logging.CRITICAL)
 
 
 class TestZont(unittest.TestCase):
@@ -31,18 +31,38 @@ class TestZont(unittest.TestCase):
 
     def test_get_device_control_by_id(self):
         """
-        Тест функции получения объектов устройства и управления по их id
+        Тест функции получения объектов устройства и управления по их id.
         """
         result = get_device_control_by_id(self.zont, 123456, 8550)
         self.assertIsInstance(
             result,
             tuple,
-            'Функция должна возвращать кортеж.'
+            'Функция должна возвращать кортеж при цифровых значениях id'
+        )
+        self.assertIsInstance(
+            get_device_control_by_id(self.zont, '123456', '8550'),
+            tuple,
+            'Функция должна возвращать кортеж при строковых значениях id'
+        )
+        self.assertIsNone(
+            get_device_control_by_id(self.zont, '123456', 'xxxx'),
+            ('Функция не возвращает None при '
+             'не корректном id объекта управления')
+        )
+        self.assertIsNone(
+            get_device_control_by_id(self.zont, 'xxxxxx', '8550'),
+            ('Функция не возвращает None при '
+             'не корректном id объекта управления')
         )
         self.assertIsNone(
             get_device_control_by_id(self.zont, 123456, 1234),
             ('Функция не возвращает None при '
              'не корректном id объекта управления')
+        )
+        self.assertIsNone(
+            get_device_control_by_id(self.zont, 654321, 8550),
+            ('Функция не возвращает None при '
+             'не корректном id устройства')
         )
         self.assertIsInstance(
             result[0],
@@ -144,13 +164,79 @@ class TestZont(unittest.TestCase):
             'Неправильная команда переключение состояния не должна проходить.'
         )
 
-    # @patch('app.zont.requests.post')
-    # def test_control_device_set_target_temp(self, mock_post):
-    #     """
-    #     Тест отправки команды для изменения заданной температуры при
-    #     получении корректных данных в mqtt.
-    #     """
-    #
+    @patch('app.zont.set_target_temp')
+    def test_control_device_set_target_temp(self, mock_set_target_temp):
+        """
+        Тест отправки команды для изменения заданной температуры при
+        получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/heating_circuits/8550/set',
+            '25.5'
+        )
+        mock_set_target_temp.assert_called()
+
+    @patch('app.zont.activate_heating_mode')
+    def test_control_device_activate_heating_mode(
+            self, mock_activate_heating_mode):
+        """
+        Тест активации режима отопления при получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/heating_modes/8389/set',
+            'activate'
+        )
+        mock_activate_heating_mode.assert_called()
+
+    @patch('app.zont.toggle_custom_button')
+    def test_control_torn_on_custom_button(self, mock_toggle_custom_button):
+        """
+        Тест включения кнопки при получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/custom_controls/8507/set',
+            'on'
+        )
+        mock_toggle_custom_button.assert_called()
+
+    @patch('app.zont.toggle_custom_button')
+    def test_control_torn_off_custom_button(self, mock_toggle_custom_button):
+        """
+        Тест выключения кнопки при получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/custom_controls/8507/set',
+            'off'
+        )
+        mock_toggle_custom_button.assert_called()
+
+    @patch('app.zont.set_guard')
+    def test_control_torn_on_guard(self, mock_set_guard):
+        """
+        Тест включения охраны при получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/guard_zones/9413/set',
+            'on'
+        )
+        mock_set_guard.assert_called()
+
+    @patch('app.zont.set_guard')
+    def test_control_torn_off_guard(self, mock_set_guard):
+        """
+        Тест выключения охраны при получении корректных данных в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/guard_zones/9413/set',
+            'off'
+        )
+        mock_set_guard.assert_called()
 
 
 if __name__ == '__main__':

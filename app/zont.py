@@ -81,7 +81,7 @@ def get_list_state_for_mqtt(
 
 
 def get_device_control_by_id(
-        zont: Zont, device_id: int, control_id: int
+        zont: Zont, device_id: int | str, control_id: int | str
 ) -> (tuple[Device, ControlEntityZONT] | None):
     """
     Функция для получения кортежа объектов устройства и объекта управления
@@ -89,14 +89,21 @@ def get_device_control_by_id(
     из переданных в неё id этих устройств.
     Если совпадения не найдено, то возвращает None.
     """
-
+    try:
+        device_id = int(device_id)
+        control_id = int(control_id)
+    except ValueError:
+        LOGGER.debug('Некорректное значение id устройства или объекта.')
+        return None
     device = get_device_by_id(zont, device_id)
     if device is None:
+        LOGGER.debug('Некорректное значение id устройства')
         return None
     for fild in control_names:
         objs = getattr(device, fild)
         for obj in objs:
             if obj.id == control_id:
+                LOGGER.debug('Device и ControlEntityZONT получены успешно.')
                 return device, obj
 
 
@@ -156,6 +163,9 @@ def set_target_temp(
     Отправка команды на прибор для установки явно заданной
     целевой температуры в одном из отопительных контуров.
     """
+
+    LOGGER.debug(f'Отправлена команда изменения заданной температуры в '
+                 f'контуре {circuit.name} = {target_temp}')
     return requests.post(
         url=URL_SET_TARGET_TEMP,
         json={
@@ -173,6 +183,8 @@ def toggle_custom_button(
 ) -> Response:
     """Отправка на прибор команды нажатия пользовательской кнопки."""
 
+    LOGGER.debug(f'Отправлена команда изменения состояния кнопки '
+                 f'{control.name} = {target_state}')
     return requests.post(
         url=URL_TRIGGER_CUSTOM_BUTTON,
         json={
@@ -190,6 +202,7 @@ def activate_heating_mode(
 ) -> Response:
     """Отправка команды на прибор для активации одного из режимов отопления"""
 
+    LOGGER.debug(f'Отправлена команда активации режима {heating_mode.name}')
     return requests.post(
         url=URL_ACTIVATE_HEATING_MODE,
         json={
@@ -224,6 +237,7 @@ def is_correct_temperature(temp: str) -> bool:
     try:
         temp = float(temp)
         if 5 <= temp <= 35:
+            LOGGER.debug('Значение температуры корректно')
             return True
     except (ValueError, TypeError):
         LOGGER.debug(f'Значение температуры должно быть числом. '
@@ -237,13 +251,25 @@ def is_correct_temperature(temp: str) -> bool:
 def is_correct_activate_mode(command: str) -> bool:
     """Проверяет корректность команды на активацию отопительного режима"""
 
-    return True if command == 'activate' else False
+    if command == 'activate':
+        LOGGER.debug('Команда активации режима отопления корректна.')
+        return True
+    LOGGER.debug(
+        f'Команда "{command}" активации режима отопления некорректна.'
+    )
+    return False
 
 
 def is_correct_toggle(command: str) -> bool:
     """Проверяет корректность команды для переключения состояния кнопки"""
 
-    return True if command.lower() in ('on', 'off') else False
+    if command.lower() in ('on', 'off'):
+        LOGGER.debug('Команда переключения кнопки корректна.')
+        return True
+    LOGGER.debug(
+        f'Команда "{command}" переключения кнопки некорректна.'
+    )
+    return False
 
 
 def control_device(zont: Zont, topic: str, payload: str) -> None:
@@ -252,7 +278,6 @@ def control_device(zont: Zont, topic: str, payload: str) -> None:
     Принимает объект Zont, топик команды и тело команды.
     """
 
-    zont.topic = TOPIC_MQTT_ZONT
     data: list[str, ...] = topic.split('/')
     payload = payload.lower()
     match data:
@@ -268,7 +293,7 @@ def control_device(zont: Zont, topic: str, payload: str) -> None:
         case [
             zont.topic, device_id, control_names.heat_mode, control_id, 'set'
         ]:
-            if activate_heating_mode(payload):
+            if is_correct_activate_mode(payload):
                 device_control = get_device_control_by_id(
                     zont, device_id, control_id
                 )
