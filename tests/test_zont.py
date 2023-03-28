@@ -6,7 +6,7 @@ from app.models import Zont, Device, ControlEntityZONT
 from app.zont import (
     get_device_by_id, get_device_control_by_id, get_list_state_for_mqtt,
     is_correct_temperature, is_correct_activate_mode, is_correct_toggle,
-    control_device
+    control_device, get_min_max_values_temp
 )
 from tests.fixtures.test_data import TEST_LIST_STATE
 
@@ -128,6 +128,36 @@ class TestZont(unittest.TestCase):
             'Неправильная работа с символьным значением температуры.'
         )
 
+    def test_get_min_max_values_temp(self):
+        """
+        Тест функции получения макс и мин температур по названию контура.
+        """
+        self.assertEqual(
+            get_min_max_values_temp('Тёплый пол'),
+            (15, 50),
+            'Контур тёплого пола не распознан'
+        )
+        self.assertEqual(
+            get_min_max_values_temp('ПОЛ'),
+            (15, 50),
+            'Контур тёплого пола не распознан'
+        )
+        self.assertEqual(
+            get_min_max_values_temp('ГОРЯЧАЯ ВОДА'),
+            (5, 75),
+            'Контур ГВС не распознан'
+        )
+        self.assertEqual(
+            get_min_max_values_temp('ГВС газ'),
+            (5, 75),
+            'Контур ГВС не распознан'
+        )
+        self.assertEqual(
+            get_min_max_values_temp('1 этаж'),
+            (5, 35),
+            'Контур ГВС не распознан'
+        )
+
     def test_is_correct_activate_mode(self):
         """
         Тест функции проверки корректность команды
@@ -237,6 +267,45 @@ class TestZont(unittest.TestCase):
             'off'
         )
         mock_set_guard.assert_called()
+
+    @patch('app.zont.set_guard')
+    def test_control_device_bad_control_name(self, mock_set_guard):
+        """
+        Тест функции управления устройством при получении
+        некорректного имени управляемого объекта в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/xxxxxx/9413/set',
+            'on'
+        )
+        mock_set_guard.assert_not_called()
+
+    @patch('app.zont.set_guard')
+    def test_control_device_bad_root_topic(self, mock_set_guard):
+        """
+        Тест функции управления устройством при получении
+        некорректного root топика в mqtt.
+        """
+        control_device(
+            self.zont,
+            'xxxx/123456/guard_zones/9413/set',
+            'on'
+        )
+        mock_set_guard.assert_not_called()
+
+    @patch('app.zont.set_guard')
+    def test_control_device_bad_finish_topic(self, mock_set_guard):
+        """
+        Тест функции управления устройством при получении
+        некорректного окончания топика в mqtt.
+        """
+        control_device(
+            self.zont,
+            'zont/123456/guard_zones/9413/set/xxx',
+            'on'
+        )
+        mock_set_guard.assert_not_called()
 
 
 if __name__ == '__main__':

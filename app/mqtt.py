@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 from app.settings import (
     LOGGER, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT
 )
-from app.zont import get_data_zont
+from app.zont import get_data_zont, control_device
 from app.models import Zont
 
 mqtt.Client.zont = Zont.parse_raw(get_data_zont())
@@ -81,7 +81,8 @@ def on_message(client, userdata, msg):
         f'С топика {msg.topic} '
         f'принято сообщение: {msg.payload.decode("utf-8")}'
     )
-
+    payload = str(msg.payload, 'utf-8')
+    control_device(client.zont, msg.topic, payload)
 
 
 def main():

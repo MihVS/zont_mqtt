@@ -1,7 +1,7 @@
-import requests
-from http import HTTPStatus
 from collections import namedtuple
+from http import HTTPStatus
 
+import requests
 from requests import Response
 
 from app.models import (
@@ -10,7 +10,7 @@ from app.models import (
 )
 from app.settings import (
     LOGGER, URL_GET_DEVICES, BODY_GET_DEVICES, HEADERS, TOPIC_MQTT_ZONT,
-    RETAIN_MQTT, URL_SET_GUARD, URL_SET_TARGET_TEMP, URL_ACTIVATE_HEATING_MODE,
+    URL_SET_GUARD, URL_SET_TARGET_TEMP, URL_ACTIVATE_HEATING_MODE,
     URL_TRIGGER_CUSTOM_BUTTON
 )
 
@@ -231,21 +231,41 @@ def set_guard(device: Device, guard_zone: GuardZone, enable: bool) -> Response:
     )
 
 
-def is_correct_temperature(temp: str) -> bool:
+def is_correct_temperature(
+        temp: str, val_min: int = 5, val_max: int = 35
+) -> bool:
     """Проверяет значение температуры на корректность"""
 
     try:
         temp = float(temp)
-        if 5 <= temp <= 35:
+        if val_min <= temp <= val_max:
             LOGGER.debug('Значение температуры корректно')
             return True
     except (ValueError, TypeError):
         LOGGER.debug(f'Значение температуры должно быть числом. '
                      f'Вы ввели: {temp}')
         return False
-    LOGGER.debug(f'Значение температуры должно быть в пределах от 5 до 35.'
-                 f'Вы ввели {temp}')
+    LOGGER.debug(f'Значение температуры должно быть в пределах от {val_min} '
+                 f'до {val_max}. Вы ввели {temp}')
     return False
+
+
+def get_min_max_values_temp(circuit_name: str) -> tuple[int, int]:
+    """
+    Функция для получения максимальной и минимальной температур
+     по имени контура отопления.
+    :return: (val_min, val_max)
+    """
+    val_min, val_max = 5, 35
+    circuit_name = circuit_name.lower()
+    matches_gvs = ('гвс', 'горяч',)
+    matches_floor = ('пол', 'тёплый',)
+    if any([x in circuit_name for x in matches_gvs]):
+        val_min, val_max = 5, 75
+    elif any([x in circuit_name for x in matches_floor]):
+        val_min, val_max = 15, 50
+
+    return val_min, val_max
 
 
 def is_correct_activate_mode(command: str) -> bool:
@@ -284,12 +304,14 @@ def control_device(zont: Zont, topic: str, payload: str) -> None:
         case [
             zont.topic, device_id, control_names.heat_circ, control_id, 'set'
         ]:
-            if is_correct_temperature(payload):
-                device_control = get_device_control_by_id(
-                    zont, device_id, control_id
-                )
+            device_control = get_device_control_by_id(
+                zont, device_id, control_id
+            )
+            device, heat_circ = device_control
+            val_min, val_max = get_min_max_values_temp(heat_circ.name)
+            if is_correct_temperature(payload, val_min, val_max):
                 if device_control is not None:
-                    set_target_temp(*device_control, float(payload))
+                    set_target_temp(device, heat_circ, float(payload))
         case [
             zont.topic, device_id, control_names.heat_mode, control_id, 'set'
         ]:
