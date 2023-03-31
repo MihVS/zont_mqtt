@@ -3,11 +3,11 @@ import time
 
 import paho.mqtt.client as mqtt
 
+from app.models import Zont, HeatingCircuit
 from app.settings import (
     LOGGER, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT
 )
 from app.zont import get_data_zont, control_device
-from app.models import Zont
 
 mqtt.Client.zont = Zont.parse_raw(get_data_zont())
 mqtt.Client.connected_flag = False
@@ -63,12 +63,6 @@ def on_disconnect(client, userdata, flags, rc=0):
         LOGGER.debug(f'Статус connected_flag: {client.connected_flag}')
 
 
-# def on_publish(client, userdata, mid):
-#     """Функция обратного вызова при публикации сообщения"""
-#
-#     _logger.debug(f'Публикация сообщения. mid={mid}')
-
-
 def on_message(client, userdata, msg):
     """
     Функция обратного вызова сообщений у подписанных топиков.
@@ -81,15 +75,25 @@ def on_message(client, userdata, msg):
         f'С топика {msg.topic} '
         f'принято сообщение: {msg.payload.decode("utf-8")}'
     )
+
     payload = str(msg.payload, 'utf-8')
-    control_device(client.zont, msg.topic, payload)
+    control_device(client.zont, msg.topic, payload, public_changed_temp)
+
+
+def public_changed_temp(circuit: HeatingCircuit, temp: float, topic: str):
+    """Обновляет текущую заданную температуру"""
+
+    circuit.target_temp = round(temp, 2)
+    client_mqtt.publish(
+        topic=topic,
+        payload=circuit.json(ensure_ascii=False)
+    )
 
 
 def main():
     client_mqtt.on_log = on_log
     client_mqtt.on_connect = on_connect
     client_mqtt.on_disconnect = on_disconnect
-    # client_mqtt.on_publish = on_publish
     client_mqtt.on_message = on_message
 
     client_mqtt.loop_start()

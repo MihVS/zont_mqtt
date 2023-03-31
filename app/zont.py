@@ -1,5 +1,6 @@
 from collections import namedtuple
 from http import HTTPStatus
+from typing import Callable
 
 import requests
 from requests import Response
@@ -292,10 +293,13 @@ def is_correct_toggle(command: str) -> bool:
     return False
 
 
-def control_device(zont: Zont, topic: str, payload: str) -> None:
+def control_device(
+        zont: Zont, topic: str, payload: str, public_changed_temp: Callable
+) -> None:
     """
     Функция для управления заданными параметрами контроллера.
-    Принимает объект Zont, топик команды и тело команды.
+    Принимает объект Zont, топик команды, тело команды и функцию для
+    изменения температуры в топике статуса.
     """
 
     data: list[str, ...] = topic.split('/')
@@ -311,7 +315,10 @@ def control_device(zont: Zont, topic: str, payload: str) -> None:
             val_min, val_max = get_min_max_values_temp(heat_circ.name)
             if is_correct_temperature(payload, val_min, val_max):
                 if device_control is not None:
-                    set_target_temp(device, heat_circ, float(payload))
+                    set_target_temp(
+                        device, heat_circ, round(float(payload), 2)
+                    )
+                    public_changed_temp(heat_circ, float(payload), topic[:-4])
         case [
             zont.topic, device_id, control_names.heat_mode, control_id, 'set'
         ]:

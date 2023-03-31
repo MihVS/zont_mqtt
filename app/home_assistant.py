@@ -1,9 +1,9 @@
 import json
 
 from app.exceptions import MethodNotOverridden
-from app.settings import TOPIC_MQTT_HA, TOPIC_MQTT_ZONT
 from app.models import Zont
-from app.zont import get_list_state_for_mqtt
+from app.settings import TOPIC_MQTT_HA, TOPIC_MQTT_ZONT
+from app.zont import get_list_state_for_mqtt, get_min_max_values_temp
 
 
 class HomeAssistant:
@@ -14,7 +14,7 @@ class HomeAssistant:
 
     def __init__(self, zont: Zont):
         self.zont = zont
-        self.config = self._get_config()
+        self.config: dict = self._get_config()
 
     def _get_config(self):
         raise MethodNotOverridden
@@ -36,6 +36,7 @@ class Sensor(HomeAssistant):
                 'unit_of_measurement': '°C',
                 'value_template': '{{ value_json.temp }}',
                 'json_attributes_topic': 'zont/123456/temp/4103/',
+                'unique_id': '278936_4103_temperature_zont'
                 'availability': [
                     {
                         'topic': 'zont/123456/online',
@@ -61,17 +62,121 @@ class Sensor(HomeAssistant):
                 'state_topic': state_topic,
                 'unit_of_measurement': data['unit'],
                 'value_template': '{{ value_json.value }}',
-                # 'enabled_by_default': True,
                 'json_attributes_topic': state_topic,
                 'unique_id': (f'{id_device}_{data["id"]}_'
                               f'{data["type"]}_{TOPIC_MQTT_ZONT}'),
                 'availability': [
                     {
-                        'topic': f'{TOPIC_MQTT_ZONT}/{id_device}/online',
-                        'payload_available': 'True',
-                        'payload_not_available': 'False'
+                        'topic': (
+                            f'{TOPIC_MQTT_ZONT}/{id_device}/sensors/'
+                            f'{data["id"]}'
+                        ),
+                        'value_template': '{{ value_json.status }}',
+                        'payload_available': 'ok',
+                        'payload_not_available': 'failure'
                     }
                 ]
             }
 
+        return config
+
+
+class Climate(HomeAssistant):
+    """Класс для климата."""
+
+    type_entity = 'climate'
+    topic_start = f'{TOPIC_MQTT_HA}/{type_entity}'
+
+    def _get_config(self) -> dict:
+        """
+        {
+            'homeassistant/climate/123456_8550/climate/config': {
+                'name': '1 этаж'
+                'availability': [
+                    {
+                        'topic': 'zont/123456/heating_circuits/8550',
+                        'value_template': '{{ value_json.status }}'
+                        'payload_available': 'ok',
+                        'payload_not_available': 'failure'
+                    }
+                ],
+                'unique_id': '"123456_8550_climate_zont"'
+                'mode_state_topic': 'zont/123456/heating_circuits/8550',
+                'mode_state_template': (
+                    '{% if value_json.is_off %} off '
+                    '{% else %} heat {% endif %}'
+                ),
+                'mode': ['off', 'heat'],
+                'action_topic': 'zont/123456/heating_circuits/8550',
+                'action_template': (
+                    '{% if value_json.active %} heating '
+                    '{% else %} idle {% endif %}'
+                ),
+                'value_template': '{{ value_json.actual_temp }}'
+                'temperature_state_topic': 'zont/123456/heating_circuits/8550',
+                'temperature_state_template': '{{ value_json.target_temp }}',
+                'current_temperature_topic': (
+                    'zont/123456/heating_circuits/8550'
+                ),
+                'current_temperature_template': (
+                    'zont/123456/heating_circuits/8550'
+                ),
+                'json_attributes_topic': 'zont/123456/heating_circuits/8550',
+                'json_attributes_template': '{{ value_json }}',
+                'temperature_command_topic': (
+                    'zont/123456/heating_circuits/8550/set'
+                ),
+                'temp_step': 0.1,
+                'min_temp': 10,
+                'max_temp': 35
+            }
+            ....
+        }
+        """
+
+        config = {}
+        list_state = get_list_state_for_mqtt(self.zont, ('heating_circuits',))
+        for state_topic, state in list_state:
+            data: dict = json.loads(state)
+            id_device = state_topic.split('/')[1]
+            min_temp, max_temp = get_min_max_values_temp(data['name'])
+            topic = (f'{self.topic_start}/'
+                     f'{id_device}_{data["id"]}/'
+                     f'{self.type_entity}/config')
+            config[topic] = {
+                'name': data['name'],
+                'availability': [
+                    {
+                        'topic': (
+                            f'{TOPIC_MQTT_ZONT}/{id_device}/heating_circuits/'
+                            f'{data["id"]}'
+                        ),
+                        'value_template': '{{ value_json.status }}',
+                        'payload_available': 'ok',
+                        'payload_not_available': 'failure'
+                    }
+                ],
+                'unique_id': (f'{id_device}_{data["id"]}_'
+                              f'{self.type_entity}_{TOPIC_MQTT_ZONT}'),
+                'mode_state_topic': state_topic,
+                'mode_state_template': (
+                    '{% if value_json.is_off %} off '
+                    '{% else %} heat {% endif %}'
+                ),
+                'modes': ['off', 'heat'],
+                'action_topic': state_topic,
+                'action_template': (
+                    '{% if value_json.active %} heating '
+                    '{% else %} idle {% endif %}'
+                ),
+                'value_template': '{{ value_json.actual_temp }}',
+                'temperature_state_topic': state_topic,
+                'temperature_state_template': '{{ value_json.target_temp }}',
+                'current_temperature_topic': state_topic,
+                'current_temperature_template': '{{ value_json.actual_temp }}',
+                'temperature_command_topic': f'{state_topic}/set',
+                'temp_step': 0.1,
+                'min_temp': min_temp,
+                'max_temp': max_temp
+            }
         return config
