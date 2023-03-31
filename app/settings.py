@@ -19,7 +19,7 @@ PSWD_MQTT = os.getenv('PSWDMQTT')
 TOPIC_MQTT_ZONT = 'zont'
 TOPIC_MQTT_HA = 'homeassistant'
 CREATE_CONFIG_HA = True
-RETAIN_MQTT = False
+RETAIN_MQTT = True
 
 HEADERS = {
         'X-ZONT-Token': os.getenv('XZONTTOKEN'),

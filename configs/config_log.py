@@ -16,7 +16,7 @@ LOGGER_CONFIG = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'level': 'DEBUG',
+            'level': 'INFO',
             'formatter': 'my_format',
             'filename': 'log/log.log',
             'maxBytes': 50000000,
@@ -25,14 +25,14 @@ LOGGER_CONFIG = {
         },
         'std': {
             'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
+            'level': 'INFO',
             'formatter': 'my_format'
         }
     },
 
     'loggers': {
         'script_logger': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'handlers': ['file', 'std']
         }
     }
