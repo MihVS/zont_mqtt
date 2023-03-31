@@ -194,8 +194,10 @@ class TestZont(unittest.TestCase):
             'Неправильная команда переключение состояния не должна проходить.'
         )
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_target_temp')
-    def test_control_device_set_target_temp(self, mock_set_target_temp):
+    def test_control_device_set_target_temp(
+            self, mock_set_target_temp, mock_public_changed_temp):
         """
         Тест отправки команды для изменения заданной температуры при
         получении корректных данных в mqtt.
@@ -203,73 +205,90 @@ class TestZont(unittest.TestCase):
         control_device(
             self.zont,
             'zont/123456/heating_circuits/8550/set',
-            '25.5'
+            '25.5',
+            mock_public_changed_temp
         )
         mock_set_target_temp.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.activate_heating_mode')
     def test_control_device_activate_heating_mode(
-            self, mock_activate_heating_mode):
+            self, mock_activate_heating_mode, mock_public_changed_temp):
         """
         Тест активации режима отопления при получении корректных данных в mqtt.
         """
         control_device(
             self.zont,
             'zont/123456/heating_modes/8389/set',
-            'activate'
+            'activate',
+            mock_public_changed_temp
         )
         mock_activate_heating_mode.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.toggle_custom_button')
-    def test_control_torn_on_custom_button(self, mock_toggle_custom_button):
+    def test_control_torn_on_custom_button(
+            self, mock_toggle_custom_button, mock_public_changed_temp):
         """
         Тест включения кнопки при получении корректных данных в mqtt.
         """
         control_device(
             self.zont,
             'zont/123456/custom_controls/8507/set',
-            'on'
+            'on',
+            mock_public_changed_temp
         )
         mock_toggle_custom_button.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.toggle_custom_button')
-    def test_control_torn_off_custom_button(self, mock_toggle_custom_button):
+    def test_control_torn_off_custom_button(
+            self, mock_toggle_custom_button, mock_public_changed_temp):
         """
         Тест выключения кнопки при получении корректных данных в mqtt.
         """
         control_device(
             self.zont,
             'zont/123456/custom_controls/8507/set',
-            'off'
+            'off',
+            mock_public_changed_temp
         )
         mock_toggle_custom_button.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_guard')
-    def test_control_torn_on_guard(self, mock_set_guard):
+    def test_control_torn_on_guard(
+            self, mock_set_guard, mock_public_changed_temp):
         """
         Тест включения охраны при получении корректных данных в mqtt.
         """
         control_device(
             self.zont,
             'zont/123456/guard_zones/9413/set',
-            'on'
+            'on',
+            mock_public_changed_temp
         )
         mock_set_guard.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_guard')
-    def test_control_torn_off_guard(self, mock_set_guard):
+    def test_control_torn_off_guard(
+            self, mock_set_guard, mock_public_changed_temp):
         """
         Тест выключения охраны при получении корректных данных в mqtt.
         """
         control_device(
             self.zont,
             'zont/123456/guard_zones/9413/set',
-            'off'
+            'off',
+            mock_public_changed_temp
         )
         mock_set_guard.assert_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_guard')
-    def test_control_device_bad_control_name(self, mock_set_guard):
+    def test_control_device_bad_control_name(
+            self, mock_set_guard, mock_public_changed_temp):
         """
         Тест функции управления устройством при получении
         некорректного имени управляемого объекта в mqtt.
@@ -277,12 +296,15 @@ class TestZont(unittest.TestCase):
         control_device(
             self.zont,
             'zont/123456/xxxxxx/9413/set',
-            'on'
+            'on',
+            mock_public_changed_temp
         )
         mock_set_guard.assert_not_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_guard')
-    def test_control_device_bad_root_topic(self, mock_set_guard):
+    def test_control_device_bad_root_topic(
+            self, mock_set_guard, mock_public_changed_temp):
         """
         Тест функции управления устройством при получении
         некорректного root топика в mqtt.
@@ -290,12 +312,15 @@ class TestZont(unittest.TestCase):
         control_device(
             self.zont,
             'xxxx/123456/guard_zones/9413/set',
-            'on'
+            'on',
+            mock_public_changed_temp
         )
         mock_set_guard.assert_not_called()
 
+    @patch('app.mqtt.public_changed_temp')
     @patch('app.zont.set_guard')
-    def test_control_device_bad_finish_topic(self, mock_set_guard):
+    def test_control_device_bad_finish_topic(
+            self, mock_set_guard, mock_public_changed_temp):
         """
         Тест функции управления устройством при получении
         некорректного окончания топика в mqtt.
@@ -303,7 +328,8 @@ class TestZont(unittest.TestCase):
         control_device(
             self.zont,
             'zont/123456/guard_zones/9413/set/xxx',
-            'on'
+            'on',
+            mock_public_changed_temp
         )
         mock_set_guard.assert_not_called()
 
