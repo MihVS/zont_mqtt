@@ -6,12 +6,13 @@
 ![mqtt version](https://img.shields.io/badge/mqtt-1.6-yellowgreen?style=plastic&logo=mqtt)
 ![pydantic version](https://img.shields.io/badge/pydantic-1.10-yellowgreen?style=plastic&logo=fastapi)
 ![requests version](https://img.shields.io/badge/requests-2.28-yellowgreen?style=plastic)
+![Home Assistant](https://img.shields.io/badge/HomeAssistant-mqtt-yellowgreen?style=plastic&logo=homeassistant)
 
 ## Описание
-Скрипт сканирует все устройства ZONT в заданном аккаунте,
-и публикует состояния всех доступных устройств в mqtt. 
+Скрипт сканирует все устройства ZONT в заданном аккаунте, и публикует состояния всех доступных устройств в mqtt. 
 А так же есть возможность управлять параметрами через mqtt.
 Для связи с облаком ZONT используется [ZONT Widget API](https://lk.zont-online.ru/widget-api/v2).
+С помощью протокола MQTT, все устройства ZONT можно интегрировать в ваш умный дом.
 
 Реализована возможность авто добавления сенсоров и контуров отопления в Home Assistant.
 
