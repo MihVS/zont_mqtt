@@ -15,7 +15,12 @@ def publish_state_to_mqtt(state_list: list[tuple, ...]) -> None:
     """Публикует все параметры девайса в mqtt"""
 
     for state in state_list:
-        client_mqtt.publish(*state, RETAIN_MQTT)
+        topic, payload = state
+        client_mqtt.publish(
+            topic=topic,
+            payload=payload,
+            retain=RETAIN_MQTT
+        )
 
 
 def publish_config_ha(zont: Zont, create_conf: bool) -> None:
