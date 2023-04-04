@@ -6,7 +6,7 @@ from app.models import Zont, Device, ControlEntityZONT
 from app.zont import (
     get_device_by_id, get_device_control_by_id, get_list_state_for_mqtt,
     is_correct_temperature, is_correct_activate_mode, is_correct_toggle,
-    control_device, get_min_max_values_temp
+    control_device, get_min_max_values_temp, get_current_mode_name
 )
 from tests.fixtures.test_data import TEST_LIST_STATE
 
@@ -332,6 +332,23 @@ class TestZont(unittest.TestCase):
             mock_public_changed_temp
         )
         mock_set_guard.assert_not_called()
+
+    def test_get_current_mode_name(self):
+        """Тест получения вид отопительного режима из названия"""
+        self.assertEqual(
+            get_current_mode_name('Комфорт'),
+            'comfort',
+            'Не правильное извлечение вида отопительного режима из имени'
+        )
+        self.assertEqual(
+            get_current_mode_name('Эконом'),
+            'eco',
+            'Не правильное извлечение вида отопительного режима из имени'
+        )
+        self.assertIsNone(
+            get_current_mode_name('Чиллл'),
+            'Не возвращается None при неизвестном имени'
+        )
 
 
 if __name__ == '__main__':

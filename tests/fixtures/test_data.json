@@ -23,7 +23,7 @@
             "heating_modes": [
                 {
                     "id": 8389,
-                    "name": "Чиллл",
+                    "name": "Комфорт",
                     "can_be_applied": true,
                     "color": "#33aa66"
                 }
