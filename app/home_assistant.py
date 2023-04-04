@@ -107,6 +107,13 @@ class Climate(HomeAssistant):
                     '{% else %} heat {% endif %}'
                 ),
                 'mode': ['off', 'heat'],
+                'preset_mode_command_topic': (
+                    'zont/123456/heating_circuits/8550'
+                    ),
+                'preset_mode_command_topic': (
+                    'zont/123456/heating_circuits/8550/mode/set'
+                    ),
+                'preset_modes': ['comfort', 'eco'],
                 'action_topic': 'zont/123456/heating_circuits/8550',
                 'action_template': (
                     '{% if value_json.active %} heating '
@@ -164,6 +171,12 @@ class Climate(HomeAssistant):
                     '{% else %} heat {% endif %}'
                 ),
                 'modes': ['off', 'heat'],
+                'preset_mode_state_topic': state_topic,
+                'preset_mode_command_topic': f'{state_topic}/mode/set',
+                'preset_mode_value_template': (
+                    '{{ value_json.current_mode_name }}'
+                ),
+                'preset_modes': ['comfort', 'eco'],
                 'action_topic': state_topic,
                 'action_template': (
                     '{% if value_json.active %} heating '

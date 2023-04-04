@@ -24,6 +24,7 @@ class HeatingCircuit(ControlEntityZONT):
     is_off: bool
     target_temp: float | None
     current_mode: int | None
+    current_mode_name: int | None = None
     target_min: float | None
     target_max: float | None
 

@@ -70,6 +70,8 @@ def get_list_state_for_mqtt(
             values = getattr(device, field)
             if type(values) is list:
                 for value in values:
+                    if field == control_names.heat_circ:
+                        add_current_mode_name(zont, device.id, value)
                     list_states.append(
                         (f'{topic_device}/{field}/{value.id}',
                          value.json(ensure_ascii=False))
@@ -79,6 +81,43 @@ def get_list_state_for_mqtt(
                     (f'{topic_device}/{field}', values)
                 )
     return list_states
+
+
+def add_current_mode_name(
+        zont: Zont, device_id: int | None, heating_circuit: HeatingCircuit
+) -> None:
+    """
+    Функция добавляет значения поля current_mode_name, которое нужно для
+    отображения отопительного режима в УД.
+    Возможные значения: comfort, eco, None.
+    Для правильного отображения в интерфейсе ZONT режимы отопления должны
+    называться: Комфорт, Эконом соответственно.
+    """
+    id_current_mode = heating_circuit.current_mode
+    if device_id is not None and id_current_mode is not None:
+        _, heating_mode = get_device_control_by_id(
+            zont,
+            device_id,
+            id_current_mode
+        )
+        heating_circuit.current_mode_name = get_current_mode_name(
+            heating_mode.name
+        )
+
+
+def get_current_mode_name(name: str) -> str | None:
+    """
+    Функция анализирует название отопительного режима и возвращает его тип.
+    Возможные возвращаемые значения: comfort, eco, None.
+    """
+
+    template_comfort = 'комф'
+    template_eco = 'эко'
+    name = name.lower().strip()
+    if template_comfort in name:
+        return 'comfort'
+    if template_eco in name:
+        return 'eco'
 
 
 def get_device_control_by_id(
@@ -258,7 +297,7 @@ def get_min_max_values_temp(circuit_name: str) -> tuple[int, int]:
     :return: (val_min, val_max)
     """
     val_min, val_max = 5, 35
-    circuit_name = circuit_name.lower()
+    circuit_name = circuit_name.lower().strip()
     matches_gvs = ('гвс', 'горяч',)
     matches_floor = ('пол', 'тёплый',)
     if any([x in circuit_name for x in matches_gvs]):
