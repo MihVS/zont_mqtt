@@ -333,7 +333,7 @@ def is_correct_toggle(command: str) -> bool:
 
 
 def control_device(
-        zont: Zont, topic: str, payload: str, public_changed_temp: Callable
+        zont: Zont, topic: str, payload: str, public_changed: Callable
 ) -> None:
     """
     Функция для управления заданными параметрами контроллера.
@@ -342,7 +342,7 @@ def control_device(
     """
 
     data: list[str, ...] = topic.split('/')
-    payload = payload.lower()
+    payload = payload.lower().strip('"')
     match data:
         case [
             zont.topic, device_id, control_names.heat_circ, control_id, 'set'
@@ -357,7 +357,7 @@ def control_device(
                     set_target_temp(
                         device, heat_circ, round(float(payload), 2)
                     )
-                    public_changed_temp(heat_circ, float(payload), topic[:-4])
+                    public_changed(heat_circ, float(payload), topic[:-4])
         case [
             zont.topic, device_id, control_names.heat_mode, control_id, 'set'
         ]:
@@ -367,6 +367,8 @@ def control_device(
                 )
                 if device_control is not None:
                     activate_heating_mode(*device_control)
+            elif payload == 'comfort' or payload == 'eco':
+                public_changed(zont)
         case [
             zont.topic, device_id, control_names.cust_contr, control_id, 'set'
         ]:
@@ -390,4 +392,4 @@ def control_device(
                 if payload == 'off' and device_control is not None:
                     set_guard(*device_control, False)
         case _:
-            LOGGER.debug(f'Такого адресата не существует: {topic}')
+            LOGGER.info(f'Такого адресата не существует: {topic}')
