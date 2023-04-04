@@ -333,7 +333,7 @@ def is_correct_toggle(command: str) -> bool:
 
 
 def control_device(
-        zont: Zont, topic: str, payload: str, public_changed: Callable
+        zont: Zont, topic: str, payload: str, publish_state_to_mqtt: Callable
 ) -> None:
     """
     Функция для управления заданными параметрами контроллера.
@@ -357,7 +357,8 @@ def control_device(
                     set_target_temp(
                         device, heat_circ, round(float(payload), 2)
                     )
-                    public_changed(heat_circ, float(payload), topic[:-4])
+                    zont = Zont.parse_raw(get_data_zont())
+                    publish_state_to_mqtt(get_list_state_for_mqtt(zont))
         case [
             zont.topic, device_id, control_names.heat_mode, control_id, 'set'
         ]:
@@ -367,8 +368,8 @@ def control_device(
                 )
                 if device_control is not None:
                     activate_heating_mode(*device_control)
-            elif payload == 'comfort' or payload == 'eco':
-                public_changed(zont)
+                    zont = Zont.parse_raw(get_data_zont())
+                    publish_state_to_mqtt(get_list_state_for_mqtt(zont))
         case [
             zont.topic, device_id, control_names.cust_contr, control_id, 'set'
         ]:
@@ -380,6 +381,8 @@ def control_device(
                     toggle_custom_button(*device_control, True)
                 if payload == 'off' and device_control is not None:
                     toggle_custom_button(*device_control, False)
+                zont = Zont.parse_raw(get_data_zont())
+                publish_state_to_mqtt(get_list_state_for_mqtt(zont))
         case [
             zont.topic, device_id, control_names.guard_zone, control_id, 'set'
         ]:
@@ -391,5 +394,7 @@ def control_device(
                     set_guard(*device_control, True)
                 if payload == 'off' and device_control is not None:
                     set_guard(*device_control, False)
+                zont = Zont.parse_raw(get_data_zont())
+                publish_state_to_mqtt(get_list_state_for_mqtt(zont))
         case _:
             LOGGER.info(f'Такого адресата не существует: {topic}')

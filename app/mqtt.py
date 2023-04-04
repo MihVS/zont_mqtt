@@ -3,12 +3,12 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from app.models import Zont, HeatingCircuit
+from app.models import Zont
 from app.settings import (
     LOGGER, HOST_MQTT, PORT_MQTT, USER_NAME_MQTT, PSWD_MQTT, TOPIC_MQTT_ZONT,
     RETAIN_MQTT
 )
-from app.zont import get_data_zont, control_device, get_list_state_for_mqtt
+from app.zont import get_data_zont, control_device
 
 mqtt.Client.zont = Zont.parse_raw(get_data_zont())
 mqtt.Client.connected_flag = False
@@ -76,29 +76,13 @@ def on_message(client, userdata, msg):
         f'С топика {msg.topic} '
         f'принято сообщение: {msg.payload.decode("utf-8")}'
     )
-    payload = msg.payload.decode('utf8').strip('"')
-    if payload == 'comfort' or payload == 'eco':
-        public_changed = public_changed_all
-    else:
-        public_changed = public_changed_temp
     payload = str(msg.payload, 'utf-8')
-    control_device(client.zont, msg.topic, payload, public_changed)
+    control_device(client.zont, msg.topic, payload, publish_state_to_mqtt)
 
 
-def public_changed_temp(circuit: HeatingCircuit, temp: float, topic: str):
-    """Обновляет текущую заданную температуру"""
+def publish_state_to_mqtt(state_list: list[tuple]) -> None:
+    """Публикует все параметры девайса в mqtt"""
 
-    circuit.target_temp = round(temp, 2)
-    client_mqtt.publish(
-        topic=topic,
-        payload=circuit.json(ensure_ascii=False)
-    )
-
-
-def public_changed_all(zont: Zont):
-    """Обновляет все данные."""
-
-    state_list = get_list_state_for_mqtt(zont)
     for state in state_list:
         topic, payload = state
         client_mqtt.publish(
