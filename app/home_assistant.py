@@ -28,6 +28,7 @@ class Sensor(HomeAssistant):
 
     def _get_config(self) -> dict:
         """
+        :return:
         {
             'homeassistant/sensor/123456_4103/temperature/config': {
                 'device_class': 'temperature',
@@ -36,7 +37,7 @@ class Sensor(HomeAssistant):
                 'unit_of_measurement': '°C',
                 'value_template': '{{ value_json.temp }}',
                 'json_attributes_topic': 'zont/123456/temp/4103/',
-                'unique_id': '278936_4103_temperature_zont'
+                'unique_id': '123456_4103_temperature_zont'
                 'availability': [
                     {
                         'topic': 'zont/123456/online',
@@ -89,6 +90,7 @@ class Climate(HomeAssistant):
 
     def _get_config(self) -> dict:
         """
+        :return:
         {
             'homeassistant/climate/123456_8550/climate/config': {
                 'name': '1 этаж'
