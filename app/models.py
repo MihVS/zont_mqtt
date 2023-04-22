@@ -55,9 +55,9 @@ class GuardZone(ControlEntityZONT):
 class CustomControl(ControlEntityZONT):
     """Пользовательский элемент управления"""
 
-    name: dict
+    name: dict | str
     type: str
-    status: bool
+    status: bool | None = None
 
 
 class Scenario(ControlEntityZONT):
