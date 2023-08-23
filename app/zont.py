@@ -80,6 +80,7 @@ def get_list_state_for_mqtt(
                 list_states.append(
                     (f'{topic_device}/{field}', values)
                 )
+
     return list_states
 
 

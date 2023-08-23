@@ -25,7 +25,7 @@ LOGGER_CONFIG = {
         },
         'std': {
             'class': 'logging.StreamHandler',
-            'level': 'INFO',
+            'level': 'DEBUG',
             'formatter': 'my_format'
         }
     },

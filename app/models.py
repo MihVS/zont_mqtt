@@ -41,7 +41,7 @@ class Sensor(BaseEntityZONT):
 
     type: str
     status: str
-    value: float
+    value: float | None
     unit: str
 
 
