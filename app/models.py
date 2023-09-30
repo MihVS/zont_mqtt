@@ -75,9 +75,9 @@ class Device(BaseEntityZONT):
     heating_circuits: list[HeatingCircuit]
     heating_modes: list[HeatingMode]
     sensors: list[Sensor]
-    guard_zones: list[GuardZone]
-    custom_controls: list[CustomControl]
-    scenarios: list[Scenario]
+    guard_zones: list[GuardZone] | None
+    custom_controls: list[CustomControl] | None
+    scenarios: list[Scenario] | None
 
 
 class Zont(BaseModel):
