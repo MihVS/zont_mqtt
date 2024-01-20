@@ -8,6 +8,12 @@
 ![requests version](https://img.shields.io/badge/requests-2.28-yellowgreen?style=plastic)
 ![Home Assistant](https://img.shields.io/badge/HomeAssistant-mqtt-yellowgreen?style=plastic&logo=homeassistant)
 
+## Внимание
+С Home Assistan лучше использовать интеграцию [ZONT](https://github.com/MihVS/zont_ha). Тут больше возможностей и удобная установка из НАCS.
+
+Поддержка ZONT_mqtt прекращена.
+
+
 ## Описание
 Скрипт сканирует все устройства ZONT в заданном аккаунте, и публикует состояния всех доступных устройств в mqtt. 
 А так же есть возможность управлять параметрами через mqtt.
